@@ -1,0 +1,23 @@
+[Input] Reading CMG Builder file "./Data/MAC7A-TM02.txt" ....
+
+Keyword INCLUDE found
+Keyword PORO found
+....Done!
+
+Keyword INCLUDE found
+Keyword ACTNUM found
+....Done!
+
+Keyword INCLUDE found
+Keyword COORD found
+....Done!
+
+Keyword INCLUDE found
+Keyword ZCORN found
+....Done!
+
+Keyword INCLUDE found
+Keyword SPECGRID found
+        Grid Dimension: 22 x 74 x 350
+        NumOfGridCells: 569800
+....Done!
