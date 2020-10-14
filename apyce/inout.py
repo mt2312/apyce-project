@@ -24,6 +24,10 @@ def readGRDECL(fn=''):
     'ACTNUM', 'COORD', 'INCLUDE', 'PERMX', 'PERMY', 'PERMZ'
     'PORO', 'ZCORN'
     '''
+
+    # Supported Keywords
+    supportedKeywords = ['ACTNUM', 'COORD', 'INCLUDE', 'PERMX', 'PERMY', 'PERMZ', 'PORO', 'ZCORN']
+
     # Try to open the file
     utils.fileOpenException(fn)
 
@@ -37,6 +41,9 @@ def readGRDECL(fn=''):
     utils.printReadInfoStart(fn)
 
     for line in file:
+        for key in supportedKeywords:
+            if not line.startswith(key):
+                G.unrec.append(key)
         if line.startswith("COORDSYS"):
             G.unrec.append('COORDSYS')
             continue
@@ -244,3 +251,24 @@ def readIncludeFile(G, fn):
     file.close()
 
     return G
+
+def writeVTK(G):
+    '''
+    Create a VTK file with all data of ECLIPSE file.
+
+    PARAMETERS
+        G - Structure with all the data
+
+    RETURNS
+        None
+    '''
+    vtkUnstructuredGrid = G.vtkUnstructuredGrid
+    filename = G.fname
+    filename = filename.split(os.path.sep)[2]
+    filename = filename.split('.')[0]
+    utils.printInfoWriteVTKStart(filename)
+    legacyWriter = vtk.vtkUnstructuredGridWriter()
+    legacyWriter.SetFileName('.'+os.path.sep+'Data'+os.path.sep+filename+'.vtk')
+    legacyWriter.SetInputData(vtkUnstructuredGrid)
+    legacyWriter.Write()
+    utils.printInfoWriteVTK()

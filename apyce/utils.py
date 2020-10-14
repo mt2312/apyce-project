@@ -1,3 +1,5 @@
+import os
+
 def fileOpenException(fn):
     '''
     Try to open the file
@@ -29,9 +31,9 @@ def printReadGridInfo(G):
 def printProcessInfoStart():
     print("[Process] Converting GRDECL to VTK...")
 
-def printProcessGridInfo(G):
-    print("\tNumOfPoints " + G.vtkUnstructuredGrid.GetNumberOfPoints())
-    print("\tNumOfCells " + G.vtkUnstructuredGrid.GetNumberOfCells())
+def printProcessGridInfo(vtkUnstructuredGrid):
+    print("\tNumOfPoints " + vtkUnstructuredGrid.GetNumberOfPoints())
+    print("\tNumOfCells " + vtkUnstructuredGrid.GetNumberOfCells())
     print("....Done!\n")
 
 def transform3DArrayIntoFlat3DMatrix(i , j, k, NX, NY, NZ):
@@ -48,3 +50,12 @@ def transform3DArrayIntoFlat3DMatrix(i , j, k, NX, NY, NZ):
     https://stackoverflow.com/questions/7367770/how-to-flatten-or-index-3d-array-in-1d-array/7367812
     '''
     return (i + NX * (j + NY * k))
+
+def printInfoSaveData(name):
+    print('\tInserting data [' + name + '] into vtk array')
+
+def printInfoWriteVTKStart(fn):
+    print("[Output] Writing Paraview file \"." + os.path.sep + "Data" + os.path.sep + fn + ".vtk\"...")
+
+def printInfoWriteVTK():
+    print("....Done!")
