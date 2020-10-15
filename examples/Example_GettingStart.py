@@ -13,4 +13,4 @@ G = readGRDECL('./Data/dome.grdecl')
 G.processGRDECL(G)
 
 # Save the data in VTK format
-writeVTK(G)
+G = writeVTK(G)

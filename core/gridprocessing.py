@@ -118,7 +118,8 @@ class Grid(object):
                 Array - Zs coords for the cell
             '''
             return None
-
+    
+    #TODO: Retornar objeto?
     def processGRDECL(self, G):
         '''
         Compute grid topology and geometry from pillar grid description

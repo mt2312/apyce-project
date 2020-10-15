@@ -41,6 +41,7 @@ def readGRDECL(fn=''):
     utils.printReadInfoStart(fn)
 
     for line in file:
+        #TODO: não está funcionando
         for key in supportedKeywords:
             if not line.startswith(key):
                 G.unrec.append(key)
@@ -184,6 +185,7 @@ def readIncludeFile(G, fn):
 
     file = open(fn, 'r')
     for line in file:
+        #TODO: precisa do G.unrec aqui também
         if line.startswith('COORDSYS'):
             G.unrec.append('COORDSYS')
             continue
@@ -257,10 +259,10 @@ def writeVTK(G):
     Create a VTK file with all data of ECLIPSE file.
 
     PARAMETERS
-        G - Structure with all the data
+        G - Structure containing the known fields of the GRDECL specification
 
     RETURNS
-        None
+        G - Structure containing the known fields of the GRDECL specification
     '''
     vtkUnstructuredGrid = G.vtkUnstructuredGrid
     filename = G.fname
@@ -272,3 +274,5 @@ def writeVTK(G):
     legacyWriter.SetInputData(vtkUnstructuredGrid)
     legacyWriter.Write()
     utils.printInfoWriteVTK()
+
+    return G
