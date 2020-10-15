@@ -6,8 +6,7 @@ Mateus Tosta (mateustosta@outlook.com.br), Petroleum Engineering Modelling Labor
   <img src = "https://github.com/mateustosta/apyce-repo/blob/master/img/resultado.png" height="400">
 </p>
 
-This project is intended to develop an open-source Python implementation focused on post-processing 3D reservoir grid files for integration  
-between the softwares CMG Builder and Schlumberger Eclipse
+This project is intended to develop an open-source Python implementation focused on post-processing 3D reservoir grid files for integration between the softwares CMG Builder and Schlumberger Eclipse
 
 ## Features available in APyCE
 
