@@ -1,7 +1,4 @@
 __pycache__/
-cp_1cell_psy.txt
-cp_1cell_psy_apyce.txt
-APyCE.py
-APyCE_bak.py
-output.txt
-teste.py
+.vscode/
+core/__pycache__/
+core/.ipynb_checkpoints

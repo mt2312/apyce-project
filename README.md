@@ -3,26 +3,10 @@ APyCE Project: A Python-based Builder/Eclipse wrapper for 3D visualization of re
 Mateus Tosta (mateustosta@outlook.com.br), Petroleum Engineering Modelling Laboratory, Federal University of Paraíba, João Pessoa, BR
 
 <p align="center">
-  <img src = "https://github.com/mateustosta/apyce-repo/blob/master/img/resultado.png" height="400">
+  <img src = "./img/PSY_Model.png" width="100%">
 </p>
 
 This project is intended to develop an open-source Python implementation focused on post-processing 3D reservoir grid files for integration between the softwares CMG Builder and Schlumberger Eclipse
-
-## Features available in APyCE
-
-#### Plotting
-
-- [ ] plotGrid - Currently, the file is exported to Paraview, but the goal is to plot the grid using Python.
-
-#### Grid Pocessing
-
-- [ ] Grid Structure - Structure a class to contain all the data on the grid.
-- [ ] Fault Process - Process and display reservoir faults
-
-#### Paraview Export
-
-- [ ] CreateVTKPoints - Method for creating VTK points, which will be used to assemble the structure to be exported.
-- [ ] CreateVTKCells - Method to create the VTK cells, which will be used to assemble the structure to be exported.
 
 ## Installation
 #### Linux
@@ -43,18 +27,11 @@ Use Anaconda (https://www.anaconda.com/download/)
     
 ## Usage
 ```python
-from inout import readGRDECL
-from inout import writeVTK
-from gridprocessing import Grid
+from APyCE import Model
 
-# Read the data from ECLIPSE INPUT file
-G = readGRDECL('./Data/dome.grdecl')
-
-# Process the file
-G.processGRDECL(G)
-
-# Save the data in VTK format
-G = writeVTK(G)
+G = Model('./Data/PSY.grdecl', 'Eclipse')
+G.process_grdecl()
+G.write_vtk()
 ```
 
 ## License

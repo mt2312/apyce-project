@@ -1,2 +1,2 @@
-numpy
-vtk
+numpy>=1.18.5
+vtk>=9.0.1
