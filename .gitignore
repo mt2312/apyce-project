@@ -2,3 +2,5 @@ __pycache__/
 .vscode/
 core/__pycache__/
 core/.ipynb_checkpoints
+* linguist-vendored
+*.py linguist-vendored=false
