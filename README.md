@@ -25,11 +25,20 @@ Use Anaconda (https://www.anaconda.com/download/)
     activate apyce
     conda install numpy vtk
     
-## Usage
+## Usage Linux
 ```python
 from APyCE import Model
 
 G = Model('./Data/PSY.grdecl', 'Eclipse')
+G.process_grdecl()
+G.write_vtk()
+```
+
+## Usage Windows
+```python
+from APyCE import Model
+
+G = Model('.\Data\PSY.grdecl', 'Eclipse')
 G.process_grdecl()
 G.write_vtk()
 ```
