@@ -207,7 +207,7 @@ class Model():
         -------
         This method does not return anything
         '''
-        print("\n[PROCESS] Converting GRDECL grid to Paraview VTK...")
+        print("\n[PROCESS] Converting GRDECL grid to Paraview VTK format...")
 
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(8*np.prod(self._cart_dims))  # 2*NX*2*NY*2*NZ
@@ -230,9 +230,15 @@ class Model():
         self._vtk_unstructured_grid.SetPoints(points)
 
         print(
-            "\t[+] Detected {} collapsed pillars.\n".format(self._n_collapsed))
+            "\t[+] Detected {} collapsed pillars.".format(self._n_collapsed))
 
-        print("[+] Creating VTK Cells...")
+        if "ACTNUM" in self._keywords:
+            _active_cells = [x for x in self._actnum if x == 1]
+            _inactive_cells = len(self._actnum) - len(_active_cells)
+            print("\t[+] Detected {} active cells and {} inactive cells.".format(
+                len(_active_cells), _inactive_cells))
+
+        print("\n[+] Creating VTK Cells...")
 
         '''
         The VTK indexes elements differently than ECLIPSE.
@@ -398,7 +404,7 @@ class Model():
 
     def _get_pillars(self, i, j):
         '''
-        Obtain the pillars index in [COORD] for each cell
+        Obtain the pillars index in [COORD] and the pillars coord for each cell
 
         Parameters
         ----------
@@ -480,7 +486,7 @@ class Model():
 
     def _get_zs(self, i, j, k):
         '''
-        Get the Z coords for a cell, each cell have eight Zs (depth of nodes)
+        Get the Z index in ZCORN and Z coords for a cell, each cell have eight Zs (depth of nodes)
 
         Parameters
         ----------
@@ -496,14 +502,6 @@ class Model():
             First the two corners in the i-direction of the first grid cell is given,
             then the two corner of the next grid block in the i-direction etc.
             The unit of the values is metres, and the depth values are positive with increasing values downwards.
-
-        In a 2D system (2x2x1), we have:
-
-        6 --- 7 --- 8
-        |  2  |  3  |  -> Cell 2 and 3
-        3 --- 4 --- 5
-        |  0  |  1  |  -> Cell 0 and 1
-        0 --- 1 --- 2
         '''
         # Recover logical dimension of grid (*2 because we have 8*nx*ny*nz values from [ZCORN])
         nx, ny, nz = 2*self._cart_dims[0], 2 * \
@@ -692,7 +690,7 @@ class _ModelHelpers():
         See more:
         https://stackoverflow.com/questions/7367770/how-to-flatten-or-index-3d-array-in-1d-array/7367812
         '''
-        return (i + nx * (j + ny * k))
+        return ((k * nx * ny) + (j * nx) + i)
 
     def np_to_vtk(self, name, numpy_data, vtk_unstructured_grid):
         '''
