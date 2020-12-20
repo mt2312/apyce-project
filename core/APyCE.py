@@ -73,7 +73,7 @@ class Model():
                 kw = re.match('^[A-Z][A-Z0-9]{0,7}(|/)', str(line))
 
                 if kw != None:
-                    if kw.group() == 'SPECGRID' or kw.group() == 'DIMENS':
+                    if kw.group() == 'SPECGRID':
                         print("[+] Reading keyword {}".format(kw.group()))
                         if kw.group() not in self._keywords:
                             self._keywords.append(kw.group())
@@ -81,6 +81,9 @@ class Model():
                         self._cart_dims = np.array(
                             re.findall('\d+', str(line))[0:3], dtype=int)
                         self._num_cell = np.prod(self._cart_dims)
+                    elif kw.group() == 'DIMENS':
+                        print("[ERROR] Only corner-point grid are supported")
+                        exit()
                     elif kw.group() == 'INCLUDE':
                         print("[+] Reading keyword {}".format(kw.group()))
                         if kw.group() not in self._keywords:
@@ -190,7 +193,7 @@ class Model():
                             print("[ERROR] SO data size must be NX*NY*NZ")
                             exit()
 
-                    if kw.group() not in self._unrec and kw.group() not in self._keywords:
+                    elif kw.group() not in self._unrec:
                         print(
                             "[+] Unrecognized keyword found {}".format(kw.group()))
                         self._unrec.append(kw.group())
