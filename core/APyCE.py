@@ -59,13 +59,13 @@ class Model():
         -------
         This method does not return anything, just modify attributes of the class
         '''
+        self._model_helpers.file_open_exception(fn)
+
         if grid_origin == 'Builder':
             self._model_helpers.parse_file(fn)
 
         if verbose == 1:
             print("[INPUT] Reading input ECLIPSE/BUILDER file...\n")
-
-        self._model_helpers.file_open_exception(fn)
 
         with open(fn) as f:
             for line in f:

@@ -38,7 +38,7 @@ G.write_vtk()
 ```python
 from APyCE import Model
 
-G = Model('.\Data\PSY.grdecl', 'Eclipse')
+G = Model('.\\Data\\PSY.grdecl', 'Eclipse')
 G.process_grdecl()
 G.write_vtk()
 ```
