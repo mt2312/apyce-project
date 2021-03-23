@@ -769,6 +769,15 @@ class _ModelHelpers():
         '''
         Parse BUILDER files and put him in ECLIPSE format.
 
+        REGEX for CMG Builder keywords ^[A-Z]+(?= ALL)|^[A-Z]+(?= CORNER)|^[A-Z]{7}$
+
+        GRID CORNER 22 74 350 - SPECGRID
+        CORNERS - COORD
+        NULL ALL - ACTNUM
+        POR ALL - PORO
+        SO ALL - SO (Oil Saturation)
+        SW ALL - Não sei
+
         Parameters
         ----------
         fn : str

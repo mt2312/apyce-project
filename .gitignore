@@ -1,5 +1,6 @@
 __pycache__/
 .vscode/
-core/__pycache__/
-core/.ipynb_checkpoints
+src/__pycache__/
+.ipynb_checkpoints
 .idea/
+src/Data/Results
