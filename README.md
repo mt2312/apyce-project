@@ -41,9 +41,7 @@ Use Anaconda (https://www.anaconda.com/download/)
 ```python
 from APyCE import Model
 
-# MUST be in src/Data folder
-pathToFile = './Data/PSY.grdecl'
-G = Model(pathToFile, 'Eclipse')
+G = Model(fn='./Data/PSY.grdecl', grid_origin='Eclipse', verbose=True)
 G.process_grdecl()
 G.write_vtk()
 ```
@@ -52,9 +50,7 @@ G.write_vtk()
 ```python
 from APyCE import Model
 
-# MUST be in src/Data folder
-pathToFile = '.\\Data\\PSY.grdecl'
-G = Model(pathToFile, 'Eclipse')
+G = Model(fn='.\\Data\\PSY.grdecl', grid_origin='Eclipse', verbose=True)
 G.process_grdecl()
 G.write_vtk()
 ```

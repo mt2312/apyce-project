@@ -6,8 +6,10 @@ import vtk.util.numpy_support as np_support
 
 
 class Model():
-    def __init__(self, fn='data.txt', grid_origin='Eclipse', verbose=1):
+    def __init__(self, fn='data.txt', grid_origin='Eclipse', verbose=True):
         self._fname = fn
+        self._basename = None
+        self._dirname = None
         self._vtk_unstructured_grid = vtk.vtkUnstructuredGrid()
 
         self._cart_dims = []
@@ -63,7 +65,13 @@ class Model():
         '''
         self._model_helpers.file_open_exception(fn)
 
-        if verbose == 1:
+        if not os.path.isabs(fn):
+            self._fname = os.path.abspath(fn)
+        self._basename = os.path.basename(self._fname)
+        self._dirname = os.path.dirname(self._fname)
+        fn = self._fname
+
+        if verbose:
             print("[INPUT] Reading input ECLIPSE file...\n")
 
         with open(fn) as f:
@@ -73,64 +81,59 @@ class Model():
 
                 if kw != None:
                     if kw.group() == 'SPECGRID':
-                        if verbose == 1:
+                        if verbose:
                             print("[+] Reading keyword {}".format(kw.group()))
                         if kw.group() not in self._keywords:
                             self._keywords.append(kw.group())
+                        else:
+                            print("[ERROR] Attempting to change already defined grid size")
+                            assert kw.group() not in self._keywords
                         line = f.readline().strip()
-                        self._cart_dims = np.array(
-                            re.findall('\d+', str(line))[0:3], dtype=int)
+                        self._cart_dims = np.array(re.findall('\d+', str(line))[0:3], dtype=int)
                         self._num_cell = np.prod(self._cart_dims)
                     elif kw.group() == 'DIMENS':
                         print("[ERROR] Only corner-point grid are supported")
-                        exit()
+                        assert kw.group() != 'DIMENS'
                     elif kw.group() == 'INCLUDE':
-                        if verbose == 1:
+                        if verbose:
                             print("[+] Reading keyword {}".format(kw.group()))
                         if kw.group() not in self._keywords:
                             self._keywords.append(kw.group())
                         line = f.readline()
-                        inc_fn = '.' + os.path.sep + "Data" + \
-                            os.path.sep + line.split('\'')[1]
-                        if verbose == 1:
-                            print("\t--> {}".format(line.split('\'')[1]))
+                        inc_fn = self._dirname + os.path.sep + line.split('\'')[1]
+                        inc_fn = os.path.normpath(inc_fn)
+                        if verbose:
+                            print("\t--> {}".format(os.path.basename(inc_fn)))
                         self._read_grdecl(inc_fn, 0)
-                        if verbose == 1:
-                            print("\t<-- {}".format(line.split('\'')[1]))
+                        if verbose:
+                            print("\t<-- {}".format(os.path.basename(inc_fn)))
                     elif kw.group() == 'COORD':
-                        self._model_helpers.check_dim(
-                            self._cart_dims, self._num_cell, kw.group(), f)
-                        if verbose == 1:
+                        self._model_helpers.check_dim(self._cart_dims, self._num_cell, kw.group(), f)
+                        if verbose:
                             print("[+] Reading keyword {}".format(kw.group()))
-                        self._coord = self._model_helpers.read_section_grdecl(
-                            f)
+                        self._coord = self._model_helpers.read_section_grdecl(f)
                         if len(self._coord) == 6*(self._cart_dims[0]+1)*(self._cart_dims[1]+1):
                             if kw.group() not in self._keywords:
                                 self._keywords.append(kw.group())
                             self._coord = np.array(self._coord, dtype=float)
                         else:
-                            print(
-                                "[ERROR] COORD data size must be 6*(NX+1)*(NY+1)")
-                            exit()
+                            print("[ERROR] COORD data size must be 6*(NX+1)*(NY+1)")
+                            assert len(self._coord) == 6*(self._cart_dims[0]+1)*(self._cart_dims[1]+1)
                     elif kw.group() == 'ZCORN':
-                        self._model_helpers.check_dim(
-                            self._cart_dims, self._num_cell, kw.group(), f)
-                        if verbose == 1:
+                        self._model_helpers.check_dim(self._cart_dims, self._num_cell, kw.group(), f)
+                        if verbose:
                             print("[+] Reading keyword {}".format(kw.group()))
-                        self._zcorn = self._model_helpers.read_section_grdecl(
-                            f)
+                        self._zcorn = self._model_helpers.read_section_grdecl(f)
                         if len(self._zcorn) == 8*self._num_cell:
                             if kw.group() not in self._keywords:
                                 self._keywords.append(kw.group())
                             self._zcorn = np.array(self._zcorn, dtype=float)
                         else:
-                            print(
-                                "[ERROR] ZCORN data size must be 2*NX*2*NY*2*NZ")
-                            exit()
+                            print("[ERROR] ZCORN data size must be 2*NX*2*NY*2*NZ")
+                            assert len(self._zcorn) == 8*self._num_cell
                     elif kw.group() == 'PORO':
-                        self._model_helpers.check_dim(
-                            self._cart_dims, self._num_cell, kw.group(), f)
-                        if verbose == 1:
+                        self._model_helpers.check_dim(self._cart_dims, self._num_cell, kw.group(), f)
+                        if verbose:
                             print("[+] Reading keyword {}".format(kw.group()))
                         self._poro = self._model_helpers.read_section_grdecl(f)
                         if len(self._poro) == self._num_cell:
@@ -139,67 +142,58 @@ class Model():
                             self._poro = np.array(self._poro, dtype=float)
                         else:
                             print("[ERROR] PORO data size must be NX*NY*NZ")
-                            exit()
+                            assert len(self._poro) == self._num_cell
                     elif kw.group() == 'PERMX':
-                        self._model_helpers.check_dim(
-                            self._cart_dims, self._num_cell, kw.group(), f)
-                        if verbose == 1:
+                        self._model_helpers.check_dim(self._cart_dims, self._num_cell, kw.group(), f)
+                        if verbose:
                             print("[+] Reading keyword {}".format(kw.group()))
-                        self._permx = self._model_helpers.read_section_grdecl(
-                            f)
+                        self._permx = self._model_helpers.read_section_grdecl(f)
                         if len(self._permx) == self._num_cell:
                             if kw.group() not in self._keywords:
                                 self._keywords.append(kw.group())
                             self._permx = np.array(self._permx, dtype=float)
                         else:
                             print("[ERROR] PERMX data size must be NX*NY*NZ")
-                            exit()
+                            assert len(self._permx) == self._num_cell
                     elif kw.group() == 'PERMY':
-                        self._model_helpers.check_dim(
-                            self._cart_dims, self._num_cell, kw.group(), f)
-                        if verbose == 1:
+                        self._model_helpers.check_dim(self._cart_dims, self._num_cell, kw.group(), f)
+                        if verbose:
                             print("[+] Reading keyword {}".format(kw.group()))
-                        self._permy = self._model_helpers.read_section_grdecl(
-                            f)
+                        self._permy = self._model_helpers.read_section_grdecl(f)
                         if len(self._permy) == self._num_cell:
                             if kw.group() not in self._keywords:
                                 self._keywords.append(kw.group())
                             self._permy = np.array(self._permy, dtype=float)
                         else:
                             print("[ERROR] PERMY data size must be NX*NY*NZ")
-                            exit()
+                            assert len(self._permy) == self._num_cell
                     elif kw.group() == 'PERMZ':
-                        self._model_helpers.check_dim(
-                            self._cart_dims, self._num_cell, kw.group(), f)
-                        if verbose == 1:
+                        self._model_helpers.check_dim(self._cart_dims, self._num_cell, kw.group(), f)
+                        if verbose:
                             print("[+] Reading keyword {}".format(kw.group()))
-                        self._permz = self._model_helpers.read_section_grdecl(
-                            f)
+                        self._permz = self._model_helpers.read_section_grdecl(f)
                         if len(self._permz) == self._num_cell:
                             if kw.group() not in self._keywords:
                                 self._keywords.append(kw.group())
                             self._permz = np.array(self._permz, dtype=float)
                         else:
                             print("[ERROR] PERMZ data size must be NX*NY*NZ")
-                            exit()
+                            assert len(self._permz) == self._num_cell
                     elif kw.group() == 'ACTNUM':
-                        self._model_helpers.check_dim(
-                            self._cart_dims, self._num_cell, kw.group(), f)
-                        if verbose == 1:
+                        self._model_helpers.check_dim(self._cart_dims, self._num_cell, kw.group(), f)
+                        if verbose:
                             print("[+] Reading keyword {}".format(kw.group()))
-                        self._actnum = self._model_helpers.read_section_grdecl(
-                            f)
+                        self._actnum = self._model_helpers.read_section_grdecl(f)
                         if len(self._actnum) == self._num_cell:
                             if kw.group() not in self._keywords:
                                 self._keywords.append(kw.group())
                             self._actnum = np.array(self._actnum, dtype=int)
                         else:
                             print("[ERROR] ACTNUM data size must be NX*NY*NZ")
-                            exit()
+                            assert len(self._actnum) == self._num_cell
                     elif kw.group() == 'SO':
-                        self._model_helpers.check_dim(
-                            self._cart_dims, self._num_cell, kw.group(), f)
-                        if verbose == 1:
+                        self._model_helpers.check_dim(self._cart_dims, self._num_cell, kw.group(), f)
+                        if verbose:
                             print("[+] Reading keyword {}".format(kw.group()))
                         self._so = self._model_helpers.read_section_grdecl(f)
                         if len(self._so) == self._num_cell:
@@ -208,12 +202,10 @@ class Model():
                             self._so = np.array(self._so, dtype=float)
                         else:
                             print("[ERROR] SO data size must be NX*NY*NZ")
-                            exit()
-
+                            assert len(self._so) == self._num_cell
                     elif kw.group() not in self._unrec:
-                        if verbose == 1:
-                            print(
-                                "[+] Unrecognized keyword found {}".format(kw.group()))
+                        if verbose:
+                            print("[+] Unrecognized keyword found {}".format(kw.group()))
                         self._unrec.append(kw.group())
 
     def _read_dat(self, fn, verbose):
@@ -237,7 +229,13 @@ class Model():
         '''
         self._model_helpers.file_open_exception(fn)
 
-        if verbose == 1:
+        if not os.path.isabs(fn):
+            self._fname = os.path.abspath(fn)
+        self._basename = os.path.basename(self._fname)
+        self._dirname = os.path.dirname(self._fname)
+        fn = self._fname
+
+        if verbose:
             print("[INPUT] Reading input BUILDER file...\n")
 
         with open(fn) as f:
@@ -248,17 +246,15 @@ class Model():
 
                 if kw != None:
                     if kw.group() == 'GRID CORNER':
-                        if verbose == 1:
+                        if verbose:
                             print("[+] Reading keyword {}".format(kw.group()))
                         if kw.group() not in self._keywords:
                             self._keywords.append(kw.group())
-                        self._cart_dims = np.array(
-                            re.findall('\d+', str(line))[0:3], dtype=int)
+                        self._cart_dims = np.array(re.findall('\d+', str(line))[0:3], dtype=int)
                         self._num_cell = np.prod(self._cart_dims)
                     elif kw.group() == 'CORNERS':
-                        self._model_helpers.check_dim(
-                            self._cart_dims, self._num_cell, kw.group(), f)
-                        if verbose == 1:
+                        self._model_helpers.check_dim(self._cart_dims, self._num_cell, kw.group(), f)
+                        if verbose:
                             print("[+] Reading keyword {}".format(kw.group()))
                         self._coord = self._model_helpers.read_section_dat(f)
                         if len(self._coord) == 6*(self._cart_dims[0]+1)*(self._cart_dims[1]+1):
@@ -266,13 +262,11 @@ class Model():
                                 self._keywords.append(kw.group())
                             self._coord = np.array(self._coord, dtype=float)
                         else:
-                            print(
-                                "[ERROR] CORNERS data size must be 6*(NX+1)*(NY+1)")
-                            exit()
+                            print("[ERROR] CORNERS data size must be 6*(NX+1)*(NY+1)")
+                            assert len(self._coord) == 6*(self._cart_dims[0]+1)*(self._cart_dims[1]+1)
                     elif kw.group() == 'POR ALL':
-                        self._model_helpers.check_dim(
-                            self._cart_dims, self._num_cell, kw.group(), f)
-                        if verbose == 1:
+                        self._model_helpers.check_dim(self._cart_dims, self._num_cell, kw.group(), f)
+                        if verbose:
                             print("[+] Reading keyword {}".format(kw.group()))
                         self._poro = self._model_helpers.read_section_dat(f)
                         if len(self._poro) == self._num_cell:
@@ -281,11 +275,10 @@ class Model():
                             self._poro = np.array(self._poro, dtype=float)
                         else:
                             print("[ERROR] POR ALL data size must be NX*NY*NZ")
-                            exit()
+                            assert len(self._poro) == self._num_cell
                     elif kw.group() == 'NULL ALL':
-                        self._model_helpers.check_dim(
-                            self._cart_dims, self._num_cell, kw.group(), f)
-                        if verbose == 1:
+                        self._model_helpers.check_dim(self._cart_dims, self._num_cell, kw.group(), f)
+                        if verbose:
                             print("[+] Reading keyword {}".format(kw.group()))
                         self._actnum = self._model_helpers.read_section_dat(f)
                         if len(self._actnum) == self._num_cell:
@@ -294,11 +287,10 @@ class Model():
                             self._actnum = np.array(self._actnum, dtype=int)
                         else:
                             print("[ERROR] NULL ALL data size must be NX*NY*NZ")
-                            exit()
+                            assert len(self._actnum) == self._num_cell
                     elif kw.group() == 'SO':
-                        self._model_helpers.check_dim(
-                            self._cart_dims, self._num_cell, kw.group(), f)
-                        if verbose == 1:
+                        self._model_helpers.check_dim(self._cart_dims, self._num_cell, kw.group(), f)
+                        if verbose:
                             print("[+] Reading keyword {}".format(kw.group()))
                         self._so = self._model_helpers.read_section_dat(f)
                         if len(self._so) == self._num_cell:
@@ -307,11 +299,10 @@ class Model():
                             self._so = np.array(self._so, dtype=float)
                         else:
                             print("[ERROR] SO data size must be NX*NY*NZ")
-                            exit()
+                            assert len(self._so) == self._num_cell
                     elif kw.group() not in self._unrec:
-                        if verbose == 1:
-                            print(
-                                "[+] Unrecognized keyword found {}".format(kw.group()))
+                        if verbose:
+                            print("[+] Unrecognized keyword found {}".format(kw.group()))
                         self._unrec.append(kw.group())
 
     def process_grdecl(self):
@@ -348,14 +339,12 @@ class Model():
                         point_id += 1
         self._vtk_unstructured_grid.SetPoints(points)
 
-        print(
-            "\t[+] Detected {} collapsed pillars.".format(self._n_collapsed))
+        print("\t[+] Detected {} collapsed pillars.".format(self._n_collapsed))
 
         if "ACTNUM" in self._keywords:
             _active_cells = [x for x in self._actnum if x == 1]
             _inactive_cells = len(self._actnum) - len(_active_cells)
-            print("\t[+] Detected {} active cells and {} inactive cells.".format(
-                len(_active_cells), _inactive_cells))
+            print("\t[+] Detected {} active cells and {} inactive cells.".format(len(_active_cells), _inactive_cells))
 
         print("\n[+] Creating VTK Cells...")
 
@@ -405,8 +394,7 @@ class Model():
                     cell.GetPointIds().SetId(6, cell_id*8+7)
                     cell.GetPointIds().SetId(7, cell_id*8+6)
 
-                    self._vtk_unstructured_grid.InsertNextCell(
-                        cell.GetCellType(), cell.GetPointIds())
+                    self._vtk_unstructured_grid.InsertNextCell(cell.GetCellType(), cell.GetPointIds())
 
                     cell_id += 1
 
@@ -486,16 +474,6 @@ class Model():
             MRST performs this process only once, this is because the array [lines]
             already contain all the necessary coordinates, here in APyCE, 
             we will do the process cell by cell.
-
-            Top_points
-            pillar[0][0] = 608.14319 = lines(1,1);
-            pillar[0][1] = -1219.582 = lines(1,2);
-            pillar[0][2] = 2249.7217 = lines(1,3);
-
-            Btm_points
-            pillar[1][0] = 598.95313 = lines(1,4);
-            pillar[1][1] = -1241.7069 = lines(1,5);
-            pillar[1][2] = 2499.0918 = lines(1,6);
             '''
             # p_idx -> [0,3]
             p_idx = x % 4
@@ -623,8 +601,7 @@ class Model():
             The unit of the values is metres, and the depth values are positive with increasing values downwards.
         '''
         # Recover logical dimension of grid (*2 because we have 8*nx*ny*nz values from [ZCORN])
-        nx, ny, nz = 2*self._cart_dims[0], 2 * \
-            self._cart_dims[1], 2*self._cart_dims[2]
+        nx, ny, nz = 2*self._cart_dims[0], 2 * self._cart_dims[1], 2*self._cart_dims[2]
 
         # Zs from top layer
         z0 = self._model_helpers.to_1D(2*i, 2*j, 2*k, nx, ny, nz)
@@ -665,8 +642,7 @@ class Model():
         data_array = []
         with open(fn) as f:
             f.readline()  # skip keyword
-            self._model_helpers.check_dim(
-                self._cart_dims, self._num_cell, name, f)
+            self._model_helpers.check_dim(self._cart_dims, self._num_cell, name, f)
             data_array = self._model_helpers.read_section_grdecl(f)
             if len(data_array) == self._num_cell:
                 data_array = np.array(data_array, dtype=float)
@@ -674,7 +650,7 @@ class Model():
                     self._keywords.append(name)
             else:
                 print("[ERROR] " + name + " data size must be NX*NY*NZ")
-                exit()
+                assert len(data_array) == self._num_cell
         self._update(data_array, name)
 
     def write_vtk(self):
@@ -687,20 +663,24 @@ class Model():
 
         Returns
         -------
-        This method does not return anything, just create the VTK file
+        This method does not return anything, just create the VTU file
         '''
-        fn = self._fname
-        fn = fn.split(os.path.sep)[2]
+        fn = self._basename
         fn = fn.split('.')[0]
-        print("\n[OUTPUT] Writing Paraview file \"." + os.path.sep +
-              "Data" + os.path.sep + "Results" + os.path.sep + fn + ".vtk\"...")
+        fn = os.path.join('/Results', fn + '.vtu')
+
+        print("\n[OUTPUT] Writing Paraview file \"" + fn + "\"...")
+        
+        fn = self._dirname + fn
+        fn = os.path.normpath(fn)
+
         if not os.path.exists('./Data/Results'):
             os.makedirs('.'+os.path.sep+'Data'+os.path.sep+'Results')
-        legacyWriter = vtk.vtkUnstructuredGridWriter()
-        legacyWriter.SetFileName(
-            '.'+os.path.sep+'Data'+os.path.sep+"Results"+os.path.sep+fn+'.vtk')
-        legacyWriter.SetInputData(self._vtk_unstructured_grid)
-        legacyWriter.Write()
+        
+        xmlWriter = vtk.vtkXMLUnstructuredGridWriter()
+        xmlWriter.SetFileName(fn)
+        xmlWriter.SetInputData(self._vtk_unstructured_grid)
+        xmlWriter.Write()
 
     def _update(self, data_array=[], name='property'):
         '''
@@ -718,28 +698,24 @@ class Model():
         This method does not return anything
         '''
         if len(self._actnum) != 0:
-            self._model_helpers.np_to_vtk(
-                'ACTNUM', self._actnum, self._vtk_unstructured_grid, self._verbose)
+            self._model_helpers.np_to_vtk('ACTNUM', self._actnum, self._vtk_unstructured_grid, self._verbose)
         if len(self._permx) != 0:
-            self._model_helpers.np_to_vtk(
-                'PERMX', self._permx, self._vtk_unstructured_grid, self._verbose)
+            self._model_helpers.np_to_vtk('PERMX', self._permx, self._vtk_unstructured_grid, self._verbose)
         if len(self._permy) != 0:
-            self._model_helpers.np_to_vtk(
-                'PERMY', self._permy, self._vtk_unstructured_grid, self._verbose)
+            self._model_helpers.np_to_vtk('PERMY', self._permy, self._vtk_unstructured_grid, self._verbose)
         if len(self._permz) != 0:
-            self._model_helpers.np_to_vtk(
-                'PERMZ', self._permz, self._vtk_unstructured_grid, self._verbose)
+            self._model_helpers.np_to_vtk('PERMZ', self._permz, self._vtk_unstructured_grid, self._verbose)
         if len(self._poro) != 0:
-            self._model_helpers.np_to_vtk(
-                'PORO', self._poro, self._vtk_unstructured_grid, self._verbose)
+            self._model_helpers.np_to_vtk('PORO', self._poro, self._vtk_unstructured_grid, self._verbose)
         if len(self._so) != 0:
-            self._model_helpers.np_to_vtk(
-                'SO', self._so, self._vtk_unstructured_grid, self._verbose)
+            self._model_helpers.np_to_vtk('SO', self._so, self._vtk_unstructured_grid, self._verbose)
         if len(data_array) != 0:
-            self._model_helpers.np_to_vtk(
-                name.upper(), data_array, self._vtk_unstructured_grid, self._verbose)
+            self._model_helpers.np_to_vtk(name.upper(), data_array, self._vtk_unstructured_grid, self._verbose)
 
 
+###################
+# AUXILIARY CLASS #
+###################
 class _ModelHelpers():
     def read_section_grdecl(self, file):
         '''
@@ -817,11 +793,12 @@ class _ModelHelpers():
         -------
         This method does not return anything
         '''
-        if len(cart_dims) == 0 or num_cell == None or any(cart_dims < 1):
-            print(
-                "[ERROR] GRDECL keyword {} found before dimension specification".format(kw))
+        if len(cart_dims) == 0 or num_cell == None or len([x for x in cart_dims if x < 1]) > 0:
+            print("[ERROR] GRDECL keyword {} found before dimension specification".format(kw))
             file.close()
-            exit()
+            assert len(cart_dims) != 0
+            assert num_cell != None
+            assert len([x for x in cart_dims if x < 1]) < 0
 
     def to_1D(self, i, j, k, nx, ny, nz):
         '''
@@ -833,7 +810,8 @@ class _ModelHelpers():
         then you could turn it into:
             Flat[HEIGHT * WIDTH * DEPTH] by
 
-        Flat[x + WIDTH * (y + DEPTH * z)] = Original[x, y, z]
+        Flat[x + WIDTH * (y + DEPTH * z)] = Original[x, y, z] or
+        Flat[(z * xMax * yMax) + (y * xMax) + x] = Original[x, y, z]
 
         See more:
         https://stackoverflow.com/questions/7367770/how-to-flatten-or-index-3d-array-in-1d-array/7367812
@@ -850,6 +828,8 @@ class _ModelHelpers():
             Name of the property e.g. ACTNUM
         numpy_data : NumPy array (dtype=int or dtype=float)
             Array with values of the property
+        vtk_unstructured_grid : vtk.vtkUnstructuredGrid() Object
+            Object holding VTK Unstructured Grid
 
         Returns
         -------
@@ -858,10 +838,9 @@ class _ModelHelpers():
         See more:
             https://pyscience.wordpress.com/2014/09/06/numpy-to-vtk-converting-your-numpy-arrays-to-vtk-arrays-and-files/
         '''
-        if verbose == 1:
+        if verbose:
             print('\tInserting data [' + name + '] into vtk array')
-        vtk_data = np_support.numpy_to_vtk(
-            num_array=numpy_data.ravel(), deep=True, array_type=vtk.VTK_FLOAT)
+        vtk_data = np_support.numpy_to_vtk(num_array=numpy_data.ravel(), deep=True, array_type=vtk.VTK_FLOAT)
         vtk_data.SetName(name)
         vtk_data.SetNumberOfComponents(1)
         vtk_unstructured_grid.GetCellData().AddArray(vtk_data)
@@ -909,4 +888,3 @@ class _ModelHelpers():
             file.close()
         except IOError:
             print("[ERROR] Can't open the file.")
-            exit()
