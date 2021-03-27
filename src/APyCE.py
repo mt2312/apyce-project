@@ -6,7 +6,7 @@ import vtk.util.numpy_support as np_support
 
 
 class Model():
-    def __init__(self, fn='data.txt', grid_origin='Eclipse'):
+    def __init__(self, fn='data.txt', grid_origin='Eclipse', verbose=1):
         self._fname = fn
         self._vtk_unstructured_grid = vtk.vtkUnstructuredGrid()
 
@@ -27,28 +27,30 @@ class Model():
         self._grid_origin = grid_origin
         self._model_helpers = _ModelHelpers()
 
-        self._read_grdecl(self._fname, self._grid_origin, verbose=1)
+        self._verbose = verbose
+
+        if (self._grid_origin == 'Eclipse'):
+            self._read_grdecl(self._fname, self._verbose)
+        else:
+            self._read_dat(self._fname, self._verbose)
 
     def __str__(self):
-        structure = "\nMODEL DATA\n"
-        structure += "cartDims = {}\n".format(self._cart_dims)
-        structure += "numCell = {}\n".format(self._num_cell)
-        structure += "keywords = {}\n".format(self._keywords)
-        structure += "unrec = {}\n".format(self._unrec)
-        return structure
+        G = "\nMODEL DATA\n"
+        G += "cartDims = {}\n".format(self._cart_dims)
+        G += "numCell = {}\n".format(self._num_cell)
+        G += "keywords = {}\n".format(self._keywords)
+        G += "unrec = {}\n".format(self._unrec)
+        return G
 
-    def _read_grdecl(self, fn, grid_origin, verbose):
+    def _read_grdecl(self, fn, verbose):
         '''
-        Read subset of ECLIPSE/BUILDER GRID file
+        Read subset of ECLIPSE GRID file
 
         The currently recognized keywords of ECLIPSE are:
-            'COORD', 'DIMENS/SPECGRID', 'INCLUDE', 'PERMX', 'PERMY',
+            'COORD', 'SPECGRID', 'INCLUDE', 'PERMX', 'PERMY',
             'PERMZ', 'PORO', 'ZCORN', 'SO'
         and, we have a partial support for:
             'ACTNUM'
-
-        The currently recognized keywords of BUILDER are:
-            'Porosity'
 
         Parameters
         ----------
@@ -61,11 +63,8 @@ class Model():
         '''
         self._model_helpers.file_open_exception(fn)
 
-        if grid_origin == 'Builder':
-            self._model_helpers.parse_file(fn)
-
         if verbose == 1:
-            print("[INPUT] Reading input ECLIPSE/BUILDER file...\n")
+            print("[INPUT] Reading input ECLIPSE file...\n")
 
         with open(fn) as f:
             for line in f:
@@ -74,7 +73,8 @@ class Model():
 
                 if kw != None:
                     if kw.group() == 'SPECGRID':
-                        print("[+] Reading keyword {}".format(kw.group()))
+                        if verbose == 1:
+                            print("[+] Reading keyword {}".format(kw.group()))
                         if kw.group() not in self._keywords:
                             self._keywords.append(kw.group())
                         line = f.readline().strip()
@@ -85,20 +85,25 @@ class Model():
                         print("[ERROR] Only corner-point grid are supported")
                         exit()
                     elif kw.group() == 'INCLUDE':
-                        print("[+] Reading keyword {}".format(kw.group()))
+                        if verbose == 1:
+                            print("[+] Reading keyword {}".format(kw.group()))
                         if kw.group() not in self._keywords:
                             self._keywords.append(kw.group())
                         line = f.readline()
                         inc_fn = '.' + os.path.sep + "Data" + \
                             os.path.sep + line.split('\'')[1]
-                        print("\t--> {}".format(line.split('\'')[1]))
-                        self._read_grdecl(inc_fn, grid_origin, 0)
-                        print("\t<-- {}".format(line.split('\'')[1]))
+                        if verbose == 1:
+                            print("\t--> {}".format(line.split('\'')[1]))
+                        self._read_grdecl(inc_fn, 0)
+                        if verbose == 1:
+                            print("\t<-- {}".format(line.split('\'')[1]))
                     elif kw.group() == 'COORD':
                         self._model_helpers.check_dim(
                             self._cart_dims, self._num_cell, kw.group(), f)
-                        print("[+] Reading keyword {}".format(kw.group()))
-                        self._coord = self._model_helpers.read_section(f)
+                        if verbose == 1:
+                            print("[+] Reading keyword {}".format(kw.group()))
+                        self._coord = self._model_helpers.read_section_grdecl(
+                            f)
                         if len(self._coord) == 6*(self._cart_dims[0]+1)*(self._cart_dims[1]+1):
                             if kw.group() not in self._keywords:
                                 self._keywords.append(kw.group())
@@ -110,8 +115,10 @@ class Model():
                     elif kw.group() == 'ZCORN':
                         self._model_helpers.check_dim(
                             self._cart_dims, self._num_cell, kw.group(), f)
-                        print("[+] Reading keyword {}".format(kw.group()))
-                        self._zcorn = self._model_helpers.read_section(f)
+                        if verbose == 1:
+                            print("[+] Reading keyword {}".format(kw.group()))
+                        self._zcorn = self._model_helpers.read_section_grdecl(
+                            f)
                         if len(self._zcorn) == 8*self._num_cell:
                             if kw.group() not in self._keywords:
                                 self._keywords.append(kw.group())
@@ -123,8 +130,9 @@ class Model():
                     elif kw.group() == 'PORO':
                         self._model_helpers.check_dim(
                             self._cart_dims, self._num_cell, kw.group(), f)
-                        print("[+] Reading keyword {}".format(kw.group()))
-                        self._poro = self._model_helpers.read_section(f)
+                        if verbose == 1:
+                            print("[+] Reading keyword {}".format(kw.group()))
+                        self._poro = self._model_helpers.read_section_grdecl(f)
                         if len(self._poro) == self._num_cell:
                             if kw.group() not in self._keywords:
                                 self._keywords.append(kw.group())
@@ -135,8 +143,10 @@ class Model():
                     elif kw.group() == 'PERMX':
                         self._model_helpers.check_dim(
                             self._cart_dims, self._num_cell, kw.group(), f)
-                        print("[+] Reading keyword {}".format(kw.group()))
-                        self._permx = self._model_helpers.read_section(f)
+                        if verbose == 1:
+                            print("[+] Reading keyword {}".format(kw.group()))
+                        self._permx = self._model_helpers.read_section_grdecl(
+                            f)
                         if len(self._permx) == self._num_cell:
                             if kw.group() not in self._keywords:
                                 self._keywords.append(kw.group())
@@ -147,8 +157,10 @@ class Model():
                     elif kw.group() == 'PERMY':
                         self._model_helpers.check_dim(
                             self._cart_dims, self._num_cell, kw.group(), f)
-                        print("[+] Reading keyword {}".format(kw.group()))
-                        self._permy = self._model_helpers.read_section(f)
+                        if verbose == 1:
+                            print("[+] Reading keyword {}".format(kw.group()))
+                        self._permy = self._model_helpers.read_section_grdecl(
+                            f)
                         if len(self._permy) == self._num_cell:
                             if kw.group() not in self._keywords:
                                 self._keywords.append(kw.group())
@@ -159,8 +171,10 @@ class Model():
                     elif kw.group() == 'PERMZ':
                         self._model_helpers.check_dim(
                             self._cart_dims, self._num_cell, kw.group(), f)
-                        print("[+] Reading keyword {}".format(kw.group()))
-                        self._permz = self._model_helpers.read_section(f)
+                        if verbose == 1:
+                            print("[+] Reading keyword {}".format(kw.group()))
+                        self._permz = self._model_helpers.read_section_grdecl(
+                            f)
                         if len(self._permz) == self._num_cell:
                             if kw.group() not in self._keywords:
                                 self._keywords.append(kw.group())
@@ -171,8 +185,10 @@ class Model():
                     elif kw.group() == 'ACTNUM':
                         self._model_helpers.check_dim(
                             self._cart_dims, self._num_cell, kw.group(), f)
-                        print("[+] Reading keyword {}".format(kw.group()))
-                        self._actnum = self._model_helpers.read_section(f)
+                        if verbose == 1:
+                            print("[+] Reading keyword {}".format(kw.group()))
+                        self._actnum = self._model_helpers.read_section_grdecl(
+                            f)
                         if len(self._actnum) == self._num_cell:
                             if kw.group() not in self._keywords:
                                 self._keywords.append(kw.group())
@@ -183,8 +199,9 @@ class Model():
                     elif kw.group() == 'SO':
                         self._model_helpers.check_dim(
                             self._cart_dims, self._num_cell, kw.group(), f)
-                        print("[+] Reading keyword {}".format(kw.group()))
-                        self._so = self._model_helpers.read_section(f)
+                        if verbose == 1:
+                            print("[+] Reading keyword {}".format(kw.group()))
+                        self._so = self._model_helpers.read_section_grdecl(f)
                         if len(self._so) == self._num_cell:
                             if kw.group() not in self._keywords:
                                 self._keywords.append(kw.group())
@@ -194,8 +211,107 @@ class Model():
                             exit()
 
                     elif kw.group() not in self._unrec:
-                        print(
-                            "[+] Unrecognized keyword found {}".format(kw.group()))
+                        if verbose == 1:
+                            print(
+                                "[+] Unrecognized keyword found {}".format(kw.group()))
+                        self._unrec.append(kw.group())
+
+    def _read_dat(self, fn, verbose):
+        '''
+        Read subset of BUILDER GRID file
+
+        The currently recognized keywords of ECLIPSE are:
+            'CORNERS', 'GRID CORNER', 'POR ALL', 'PERMI ALL'
+            'SO ALL'
+        and, we have a partial support for:
+            'NULL ALL'
+
+        Parameters
+        ----------
+        fn : str
+            String holding name of GRDECL specification
+
+        Returns
+        -------
+        This method does not return anything, just modify attributes of the class
+        '''
+        self._model_helpers.file_open_exception(fn)
+
+        if verbose == 1:
+            print("[INPUT] Reading input BUILDER file...\n")
+
+        with open(fn) as f:
+            for line in f:
+                # Keyword pattern
+                kw = re.match(
+                    '^[A-Z]+(?= ALL)|^[A-Z]+(?= CORNER)|^[A-Z]{7}$', str(line))
+
+                if kw != None:
+                    if kw.group() == 'GRID CORNER':
+                        if verbose == 1:
+                            print("[+] Reading keyword {}".format(kw.group()))
+                        if kw.group() not in self._keywords:
+                            self._keywords.append(kw.group())
+                        self._cart_dims = np.array(
+                            re.findall('\d+', str(line))[0:3], dtype=int)
+                        self._num_cell = np.prod(self._cart_dims)
+                    elif kw.group() == 'CORNERS':
+                        self._model_helpers.check_dim(
+                            self._cart_dims, self._num_cell, kw.group(), f)
+                        if verbose == 1:
+                            print("[+] Reading keyword {}".format(kw.group()))
+                        self._coord = self._model_helpers.read_section_dat(f)
+                        if len(self._coord) == 6*(self._cart_dims[0]+1)*(self._cart_dims[1]+1):
+                            if kw.group() not in self._keywords:
+                                self._keywords.append(kw.group())
+                            self._coord = np.array(self._coord, dtype=float)
+                        else:
+                            print(
+                                "[ERROR] CORNERS data size must be 6*(NX+1)*(NY+1)")
+                            exit()
+                    elif kw.group() == 'POR ALL':
+                        self._model_helpers.check_dim(
+                            self._cart_dims, self._num_cell, kw.group(), f)
+                        if verbose == 1:
+                            print("[+] Reading keyword {}".format(kw.group()))
+                        self._poro = self._model_helpers.read_section_dat(f)
+                        if len(self._poro) == self._num_cell:
+                            if kw.group() not in self._keywords:
+                                self._keywords.append(kw.group())
+                            self._poro = np.array(self._poro, dtype=float)
+                        else:
+                            print("[ERROR] POR ALL data size must be NX*NY*NZ")
+                            exit()
+                    elif kw.group() == 'NULL ALL':
+                        self._model_helpers.check_dim(
+                            self._cart_dims, self._num_cell, kw.group(), f)
+                        if verbose == 1:
+                            print("[+] Reading keyword {}".format(kw.group()))
+                        self._actnum = self._model_helpers.read_section_dat(f)
+                        if len(self._actnum) == self._num_cell:
+                            if kw.group() not in self._keywords:
+                                self._keywords.append(kw.group())
+                            self._actnum = np.array(self._actnum, dtype=int)
+                        else:
+                            print("[ERROR] NULL ALL data size must be NX*NY*NZ")
+                            exit()
+                    elif kw.group() == 'SO':
+                        self._model_helpers.check_dim(
+                            self._cart_dims, self._num_cell, kw.group(), f)
+                        if verbose == 1:
+                            print("[+] Reading keyword {}".format(kw.group()))
+                        self._so = self._model_helpers.read_section_dat(f)
+                        if len(self._so) == self._num_cell:
+                            if kw.group() not in self._keywords:
+                                self._keywords.append(kw.group())
+                            self._so = np.array(self._so, dtype=float)
+                        else:
+                            print("[ERROR] SO data size must be NX*NY*NZ")
+                            exit()
+                    elif kw.group() not in self._unrec:
+                        if verbose == 1:
+                            print(
+                                "[+] Unrecognized keyword found {}".format(kw.group()))
                         self._unrec.append(kw.group())
 
     def process_grdecl(self):
@@ -551,7 +667,7 @@ class Model():
             f.readline()  # skip keyword
             self._model_helpers.check_dim(
                 self._cart_dims, self._num_cell, name, f)
-            data_array = self._model_helpers.read_section(f)
+            data_array = self._model_helpers.read_section_grdecl(f)
             if len(data_array) == self._num_cell:
                 data_array = np.array(data_array, dtype=float)
                 if name not in self._keywords:
@@ -603,37 +719,37 @@ class Model():
         '''
         if len(self._actnum) != 0:
             self._model_helpers.np_to_vtk(
-                'ACTNUM', self._actnum, self._vtk_unstructured_grid)
+                'ACTNUM', self._actnum, self._vtk_unstructured_grid, self._verbose)
         if len(self._permx) != 0:
             self._model_helpers.np_to_vtk(
-                'PERMX', self._permx, self._vtk_unstructured_grid)
+                'PERMX', self._permx, self._vtk_unstructured_grid, self._verbose)
         if len(self._permy) != 0:
             self._model_helpers.np_to_vtk(
-                'PERMY', self._permy, self._vtk_unstructured_grid)
+                'PERMY', self._permy, self._vtk_unstructured_grid, self._verbose)
         if len(self._permz) != 0:
             self._model_helpers.np_to_vtk(
-                'PERMZ', self._permz, self._vtk_unstructured_grid)
+                'PERMZ', self._permz, self._vtk_unstructured_grid, self._verbose)
         if len(self._poro) != 0:
             self._model_helpers.np_to_vtk(
-                'PORO', self._poro, self._vtk_unstructured_grid)
+                'PORO', self._poro, self._vtk_unstructured_grid, self._verbose)
         if len(self._so) != 0:
             self._model_helpers.np_to_vtk(
-                'SO', self._so, self._vtk_unstructured_grid)
+                'SO', self._so, self._vtk_unstructured_grid, self._verbose)
         if len(data_array) != 0:
             self._model_helpers.np_to_vtk(
-                name.upper(), data_array, self._vtk_unstructured_grid)
+                name.upper(), data_array, self._vtk_unstructured_grid, self._verbose)
 
 
 class _ModelHelpers():
-    def read_section(self, file):
+    def read_section_grdecl(self, file):
         '''
-        Read the section of data in the ECLIPSE/BUILDER input file
+        Read the section of data in the ECLIPSE input file
         and return the array of values
 
         Parameters
         ----------
         file : file
-            ECLIPSE/BUILDER input file
+            ECLIPSE input file
 
         Returns
         -------
@@ -649,6 +765,35 @@ class _ModelHelpers():
             values = self.exapand_scalars(line)
             section.extend(values)
             if section[-1] == '/':
+                section.pop()
+                break
+        return section
+
+    def read_section_dat(sell, file):
+        '''
+        Read the section of data in the BUILDER input file
+        and return the array of values
+
+        Parameters
+        ----------
+        file : file
+            BUILDER input file
+
+        Returns
+        -------
+        section
+            Array with values of the section
+        '''
+        section = []
+        while True:
+            line = file.readline()
+            if line.startswith('**') or not line.strip():
+                # Ignore blank lines and comments
+                continue
+            values = self.expand_scalars(line)
+            section.extend(values)
+            # TODO: How to check if DAT block is ended? (GRDECL = /)
+            if section[-1] == -1:
                 section.pop()
                 break
         return section
@@ -695,7 +840,7 @@ class _ModelHelpers():
         '''
         return ((k * nx * ny) + (j * nx) + i)
 
-    def np_to_vtk(self, name, numpy_data, vtk_unstructured_grid):
+    def np_to_vtk(self, name, numpy_data, vtk_unstructured_grid, verbose):
         '''
         Convert the numpy array to vtk array and add this array to structure grid
 
@@ -713,7 +858,8 @@ class _ModelHelpers():
         See more:
             https://pyscience.wordpress.com/2014/09/06/numpy-to-vtk-converting-your-numpy-arrays-to-vtk-arrays-and-files/
         '''
-        print('\tInserting data [' + name + '] into vtk array')
+        if verbose == 1:
+            print('\tInserting data [' + name + '] into vtk array')
         vtk_data = np_support.numpy_to_vtk(
             num_array=numpy_data.ravel(), deep=True, array_type=vtk.VTK_FLOAT)
         vtk_data.SetName(name)
@@ -764,46 +910,3 @@ class _ModelHelpers():
         except IOError:
             print("[ERROR] Can't open the file.")
             exit()
-
-    def parse_file(self, fn):
-        '''
-        Parse BUILDER files and put him in ECLIPSE format.
-
-        REGEX for CMG Builder keywords ^[A-Z]+(?= ALL)|^[A-Z]+(?= CORNER)|^[A-Z]{7}$
-
-        GRID CORNER 22 74 350 - SPECGRID
-        CORNERS - COORD
-        NULL ALL - ACTNUM
-        POR ALL - PORO
-        SO ALL - SO (Oil Saturation)
-        SW ALL - Não sei
-
-        Parameters
-        ----------
-        fn : str
-            String holding name of GRDECL specification.
-
-        Returns
-        -------
-        This method does not return anything, 
-            but creates a new file named "fn_parsed.txt", 
-            and rename the file "fn" to "fn_BuilderFile.bak"
-        '''
-        self.file_open_exception(fn)
-
-        with open(fn) as f:
-            for line in f:
-                if line.startswith('\'Porosity'):
-                    print("[+] Reading keyword Porosity")
-                    new_file = open(fn+'_parsed.txt', 'w')
-                    new_file.write('PORO\n')
-                    while True:
-                        line = f.readline()
-                        new_file.write(line)
-                        if not line.strip():
-                            new_file.write('/')
-                            break
-                    new_file.close()
-                    os.rename(fn, fn+'_BuilderFile.bak')
-                    os.rename(fn+'_parsed.txt', fn)
-                    break
