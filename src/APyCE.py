@@ -5,7 +5,7 @@ import os
 import vtk.util.numpy_support as np_support
 
 
-class Model():
+class Model:
     def __init__(self, fn='data.txt', grid_origin='Eclipse', verbose=True):
         self._fname = fn
         self._basename = None
@@ -31,21 +31,21 @@ class Model():
 
         self._verbose = verbose
 
-        if (self._grid_origin == 'Eclipse'):
+        if self._grid_origin == 'Eclipse':
             self._read_grdecl(self._fname, self._verbose)
         else:
             self._read_dat(self._fname, self._verbose)
 
     def __str__(self):
-        G = "\nMODEL DATA\n"
-        G += "cartDims = {}\n".format(self._cart_dims)
-        G += "numCell = {}\n".format(self._num_cell)
-        G += "keywords = {}\n".format(self._keywords)
-        G += "unrec = {}\n".format(self._unrec)
-        return G
+        structure = "\nMODEL DATA\n"
+        structure += "cartDims = {}\n".format(self._cart_dims)
+        structure += "numCell = {}\n".format(self._num_cell)
+        structure += "keywords = {}\n".format(self._keywords)
+        structure += "unrec = {}\n".format(self._unrec)
+        return structure
 
     def _read_grdecl(self, fn, verbose):
-        '''
+        """
         Read subset of ECLIPSE GRID file
 
         The currently recognized keywords of ECLIPSE are:
@@ -62,14 +62,14 @@ class Model():
         Returns
         -------
         This method does not return anything, just modify attributes of the class
-        '''
+        """
         self._model_helpers.file_open_exception(fn)
 
         if not os.path.isabs(fn):
             self._fname = os.path.abspath(fn)
+            fn = self._fname
         self._basename = os.path.basename(self._fname)
         self._dirname = os.path.dirname(self._fname)
-        fn = self._fname
 
         if verbose:
             print("[INPUT] Reading input ECLIPSE file...\n")
@@ -79,7 +79,7 @@ class Model():
                 # Keyword pattern
                 kw = re.match('^[A-Z][A-Z0-9]{0,7}(|/)', str(line))
 
-                if kw != None:
+                if kw is not None:
                     if kw.group() == 'SPECGRID':
                         if verbose:
                             print("[+] Reading keyword {}".format(kw.group()))
@@ -104,7 +104,7 @@ class Model():
                         inc_fn = os.path.normpath(inc_fn)
                         if verbose:
                             print("\t--> {}".format(os.path.basename(inc_fn)))
-                        self._read_grdecl(inc_fn, 0)
+                        self._read_grdecl(inc_fn, False)
                         if verbose:
                             print("\t<-- {}".format(os.path.basename(inc_fn)))
                     elif kw.group() == 'COORD':
@@ -209,7 +209,7 @@ class Model():
                         self._unrec.append(kw.group())
 
     def _read_dat(self, fn, verbose):
-        '''
+        """
         Read subset of BUILDER GRID file
 
         The currently recognized keywords of ECLIPSE are:
@@ -226,7 +226,7 @@ class Model():
         Returns
         -------
         This method does not return anything, just modify attributes of the class
-        '''
+        """
         self._model_helpers.file_open_exception(fn)
 
         if not os.path.isabs(fn):
@@ -241,10 +241,9 @@ class Model():
         with open(fn) as f:
             for line in f:
                 # Keyword pattern
-                kw = re.match(
-                    '^[A-Z]+(?= ALL)|^[A-Z]+(?= CORNER)|^[A-Z]{7}$', str(line))
+                kw = re.match('^[A-Z]+(?= ALL)|^[A-Z]+(?= CORNER)|^[A-Z]{7}$', str(line))
 
-                if kw != None:
+                if kw is not None:
                     if kw.group() == 'GRID CORNER':
                         if verbose:
                             print("[+] Reading keyword {}".format(kw.group()))
@@ -306,7 +305,7 @@ class Model():
                         self._unrec.append(kw.group())
 
     def process_grdecl(self):
-        '''
+        """
         Compute grid topology and geometry from pillar grid description
 
         Parameters
@@ -316,7 +315,7 @@ class Model():
         Returns
         -------
         This method does not return anything
-        '''
+        """
         print("\n[PROCESS] Converting GRDECL grid to Paraview VTK format...")
 
         points = vtk.vtkPoints()
@@ -402,7 +401,7 @@ class Model():
         self._update()
 
     def _get_cell_coords(self, i, j, k):
-        '''
+        """
         Get XYZ coords for each node of a cell
 
         Parameters
@@ -440,7 +439,7 @@ class Model():
         | /   top   | /
         |/    face  |/
         0 --------- 1
-        '''
+        """
         coord = []
 
         # Get pillars for this cell
@@ -480,13 +479,13 @@ class Model():
 
             # Absolute tolerance used to detect collapsed pillars where the top
             # pillar point coincides with the bottom pillar point
-            COINCIDENCE_TOLERANCE = 2.2204e-14
+            coincidence_tolerance = 2.2204e-14
 
             pillar = pillars[p_idx]
             z_coord = zs[x]
 
             # degenerated cell condition
-            if abs(pillar[1][2] - pillar[0][2]) < COINCIDENCE_TOLERANCE:
+            if abs(pillar[1][2] - pillar[0][2]) < coincidence_tolerance:
                 self._n_collapsed += 1
                 t = 0.0
             else:
@@ -500,7 +499,7 @@ class Model():
         return coord
 
     def _get_pillars(self, i, j):
-        '''
+        """
         Obtain the pillars index in [COORD] and the pillars coord for each cell
 
         Parameters
@@ -538,7 +537,7 @@ class Model():
         (4,5,7,8) - cell 3
 
         Some pillars are shared between cells
-        '''
+        """
         pillars = []
 
         # Recover logical dimension of grid
@@ -546,10 +545,10 @@ class Model():
         nx, ny = self._cart_dims[0]+1, self._cart_dims[1]+1
 
         # Get the pillar index in [COORD]
-        p0 = self._model_helpers.to_1D(i, j, 0, nx, ny, 0)
-        p1 = self._model_helpers.to_1D(i+1, j, 0, nx, ny, 0)
-        p2 = self._model_helpers.to_1D(i, j+1, 0, nx, ny, 0)
-        p3 = self._model_helpers.to_1D(i+1, j+1, 0, nx, ny, 0)
+        p0 = self._model_helpers.to_1d(i, j, 0, nx, ny, 0)
+        p1 = self._model_helpers.to_1d(i+1, j, 0, nx, ny, 0)
+        p2 = self._model_helpers.to_1d(i, j+1, 0, nx, ny, 0)
+        p3 = self._model_helpers.to_1d(i+1, j+1, 0, nx, ny, 0)
 
         # Get the pillar from [COORD]
         '''
@@ -582,7 +581,7 @@ class Model():
         return pillars
 
     def _get_zs(self, i, j, k):
-        '''
+        """
         Get the Z index in ZCORN and Z coords for a cell, each cell have eight Zs (depth of nodes)
 
         Parameters
@@ -599,21 +598,21 @@ class Model():
             First the two corners in the i-direction of the first grid cell is given,
             then the two corner of the next grid block in the i-direction etc.
             The unit of the values is metres, and the depth values are positive with increasing values downwards.
-        '''
+        """
         # Recover logical dimension of grid (*2 because we have 8*nx*ny*nz values from [ZCORN])
         nx, ny, nz = 2*self._cart_dims[0], 2 * self._cart_dims[1], 2*self._cart_dims[2]
 
         # Zs from top layer
-        z0 = self._model_helpers.to_1D(2*i, 2*j, 2*k, nx, ny, nz)
-        z1 = self._model_helpers.to_1D(2*i+1, 2*j, 2*k, nx, ny, nz)
-        z2 = self._model_helpers.to_1D(2*i, 2*j+1, 2*k, nx, ny, nz)
-        z3 = self._model_helpers.to_1D(2*i+1, 2*j+1, 2*k, nx, ny, nz)
+        z0 = self._model_helpers.to_1d(2*i, 2*j, 2*k, nx, ny, nz)
+        z1 = self._model_helpers.to_1d(2*i+1, 2*j, 2*k, nx, ny, nz)
+        z2 = self._model_helpers.to_1d(2*i, 2*j+1, 2*k, nx, ny, nz)
+        z3 = self._model_helpers.to_1d(2*i+1, 2*j+1, 2*k, nx, ny, nz)
 
         # Zs from bottom layer
-        z4 = self._model_helpers.to_1D(2*i, 2*j, 2*k+1, nx, ny, nz)
-        z5 = self._model_helpers.to_1D(2*i+1, 2*j, 2*k+1, nx, ny, nz)
-        z6 = self._model_helpers.to_1D(2*i, 2*j+1, 2*k+1, nx, ny, nz)
-        z7 = self._model_helpers.to_1D(2*i+1, 2*j+1, 2*k+1, nx, ny, nz)
+        z4 = self._model_helpers.to_1d(2*i, 2*j, 2*k+1, nx, ny, nz)
+        z5 = self._model_helpers.to_1d(2*i+1, 2*j, 2*k+1, nx, ny, nz)
+        z6 = self._model_helpers.to_1d(2*i, 2*j+1, 2*k+1, nx, ny, nz)
+        z7 = self._model_helpers.to_1d(2*i+1, 2*j+1, 2*k+1, nx, ny, nz)
 
         # Create an array with the eight zs' index
         zs_idx = [z0, z1, z2, z3, z4, z5, z6, z7]
@@ -621,7 +620,7 @@ class Model():
         return [self._zcorn[x] for x in zs_idx]
 
     def load_cell_data(self, fn, name):
-        '''
+        """
         Read a file with data and append this data to model
 
         Parameters
@@ -637,9 +636,8 @@ class Model():
 
         Assuming that the data to be loaded is a reservoir
             property that has a value for each cell, we must have NX * NY * NZ values
-        '''
+        """
         self._model_helpers.file_open_exception(fn)
-        data_array = []
         with open(fn) as f:
             f.readline()  # skip keyword
             self._model_helpers.check_dim(self._cart_dims, self._num_cell, name, f)
@@ -653,9 +651,9 @@ class Model():
                 assert len(data_array) == self._num_cell
         self._update(data_array, name)
 
-    def write_vtk(self):
-        '''
-        Create a VTK file with all data of ECLIPSE/BUILDER file.
+    def write_vtu(self):
+        """
+        Create a VTU file with all data of ECLIPSE/BUILDER file.
 
         Parameters
         ----------
@@ -664,7 +662,7 @@ class Model():
         Returns
         -------
         This method does not return anything, just create the VTU file
-        '''
+        """
         fn = self._basename
         fn = fn.split('.')[0]
         fn = os.path.join('/Results', fn + '.vtu')
@@ -683,7 +681,7 @@ class Model():
         xmlWriter.Write()
 
     def _update(self, data_array=[], name='property'):
-        '''
+        """
         This method update the data in the vtkUnsctructuredGrid.
 
         Parameters (Optional)
@@ -696,7 +694,7 @@ class Model():
         Returns
         -------
         This method does not return anything
-        '''
+        """
         if len(self._actnum) != 0:
             self._model_helpers.np_to_vtk('ACTNUM', self._actnum, self._vtk_unstructured_grid, self._verbose)
         if len(self._permx) != 0:
@@ -712,13 +710,12 @@ class Model():
         if len(data_array) != 0:
             self._model_helpers.np_to_vtk(name.upper(), data_array, self._vtk_unstructured_grid, self._verbose)
 
-
 ###################
 # AUXILIARY CLASS #
 ###################
-class _ModelHelpers():
+class _ModelHelpers:
     def read_section_grdecl(self, file):
-        '''
+        """
         Read the section of data in the ECLIPSE input file
         and return the array of values
 
@@ -731,22 +728,22 @@ class _ModelHelpers():
         -------
         section
             Array with values of the section
-        '''
+        """
         section = []
         while True:
             line = file.readline()
             if line.startswith('--') or not line.strip():
                 # Ignore blank lines and comments
                 continue
-            values = self.exapand_scalars(line)
+            values = self.expand_scalars(line)
             section.extend(values)
             if section[-1] == '/':
                 section.pop()
                 break
         return section
 
-    def read_section_dat(sell, file):
-        '''
+    def read_section_dat(self, file):
+        """
         Read the section of data in the BUILDER input file
         and return the array of values
 
@@ -759,7 +756,7 @@ class _ModelHelpers():
         -------
         section
             Array with values of the section
-        '''
+        """
         section = []
         while True:
             line = file.readline()
@@ -775,7 +772,7 @@ class _ModelHelpers():
         return section
 
     def check_dim(self, cart_dims, num_cell, kw, file):
-        '''
+        """
         Check dimension of the grid
 
         Parameters
@@ -792,16 +789,16 @@ class _ModelHelpers():
         Returns
         -------
         This method does not return anything
-        '''
-        if len(cart_dims) == 0 or num_cell == None or len([x for x in cart_dims if x < 1]) > 0:
+        """
+        if len(cart_dims) == 0 or num_cell is None or len([x for x in cart_dims if x < 1]) > 0:
             print("[ERROR] GRDECL keyword {} found before dimension specification".format(kw))
             file.close()
             assert len(cart_dims) != 0
-            assert num_cell != None
+            assert num_cell is not None
             assert len([x for x in cart_dims if x < 1]) < 0
 
-    def to_1D(self, i, j, k, nx, ny, nz):
-        '''
+    def to_1d(self, i, j, k, nx, ny, nz):
+        """
         Convert index [HEIGHT, WIDTH, DEPTH] to a flat 3D matrix index [HEIGHT * WIDTH * DEPTH]
 
         If you have:
@@ -815,11 +812,11 @@ class _ModelHelpers():
 
         See more:
         https://stackoverflow.com/questions/7367770/how-to-flatten-or-index-3d-array-in-1d-array/7367812
-        '''
-        return ((k * nx * ny) + (j * nx) + i)
+        """
+        return (k * nx * ny) + (j * nx) + i
 
     def np_to_vtk(self, name, numpy_data, vtk_unstructured_grid, verbose):
-        '''
+        """
         Convert the numpy array to vtk array and add this array to structure grid
 
         Parameters
@@ -830,6 +827,7 @@ class _ModelHelpers():
             Array with values of the property
         vtk_unstructured_grid : vtk.vtkUnstructuredGrid() Object
             Object holding VTK Unstructured Grid
+        verbose : Boolean
 
         Returns
         -------
@@ -837,7 +835,7 @@ class _ModelHelpers():
 
         See more:
             https://pyscience.wordpress.com/2014/09/06/numpy-to-vtk-converting-your-numpy-arrays-to-vtk-arrays-and-files/
-        '''
+        """
         if verbose:
             print('\tInserting data [' + name + '] into vtk array')
         vtk_data = np_support.numpy_to_vtk(num_array=numpy_data.ravel(), deep=True, array_type=vtk.VTK_FLOAT)
@@ -845,8 +843,8 @@ class _ModelHelpers():
         vtk_data.SetNumberOfComponents(1)
         vtk_unstructured_grid.GetCellData().AddArray(vtk_data)
 
-    def exapand_scalars(self, line):
-        '''
+    def expand_scalars(self, line):
+        """
         Expand the values of the format:
             2*3 => [3,3]
 
@@ -859,10 +857,10 @@ class _ModelHelpers():
         -------
         values : int[] or float[]
             Values expanded
-        '''
+        """
         values = []
         for scalar in line.split():
-            if not '*' in scalar:
+            if '*' not in scalar:
                 values.append(scalar)
             else:
                 tmp = scalar.split('*')
@@ -871,7 +869,7 @@ class _ModelHelpers():
         return values
 
     def file_open_exception(self, fn=''):
-        '''
+        """
         Try to open the file
 
         Parameters
@@ -882,7 +880,7 @@ class _ModelHelpers():
         Returns
         -------
         This method does not return anything
-        '''
+        """
         try:
             file = open(fn, 'r')
             file.close()

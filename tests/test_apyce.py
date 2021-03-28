@@ -52,7 +52,7 @@ class TestModel():
         grid_file_path = os.path.abspath(os.path.join(test_dir, grid_file))
         G = Model(fn=grid_file_path, verbose=False)
         G.process_grdecl()
-        G.write_vtk()
+        G.write_vtu()
         vtk_file_path = os.path.abspath(os.path.join(vtk_dir))
         assert os.stat(os.path.normpath(vtk_file_path+'/dome.vtu')).st_size == 133670
         os.remove(os.path.normpath(vtk_file_path+'/dome.vtu'))
@@ -77,14 +77,14 @@ class TestModel():
         f = open(grid_file_path)
         G._model_helpers.check_dim(G._cart_dims, G._num_cell, 'KEYWORD', f)
 
-    def test_to_1D(self):
+    def test_to_1d(self):
         grid_file = 'Data/dome.grdecl'
         test_dir = os.path.dirname(__file__)
         grid_file_path = os.path.abspath(os.path.join(test_dir, grid_file))
         G = Model(fn=grid_file_path, verbose=False)
-        assert G._model_helpers.to_1D(0, 0, 0, 22, 74, 350) == 0
-        assert G._model_helpers.to_1D(10, 20, 0, 22, 74, 350) == 450
-        assert G._model_helpers.to_1D(22, 74, 350, 22, 74, 350) == 571450
+        assert G._model_helpers.to_1d(0, 0, 0, 22, 74, 350) == 0
+        assert G._model_helpers.to_1d(10, 20, 0, 22, 74, 350) == 450
+        assert G._model_helpers.to_1d(22, 74, 350, 22, 74, 350) == 571450
 
 
     def test_np_to_vtk(self):
@@ -100,7 +100,7 @@ class TestModel():
         test_dir = os.path.dirname(__file__)
         grid_file_path = os.path.abspath(os.path.join(test_dir, grid_file))
         G = Model(fn=grid_file_path, verbose=False)
-        assert G._model_helpers.exapand_scalars('2*3 1 2 3 04 9 3 3*2.12312') == ['3', '3', '1', '2', '3', '04', '9', '3', '2.12312', '2.12312', '2.12312']
+        assert G._model_helpers.expand_scalars('2*3 1 2 3 04 9 3 3*2.12312') == ['3', '3', '1', '2', '3', '04', '9', '3', '2.12312', '2.12312', '2.12312']
 
     def test_file_open_exception(self):
         grid_file = 'Data/dome.grdecl'

@@ -6,3 +6,4 @@ src/__pycache__/
 src/Data/Results
 .pytest_cache
 src/test.py
+venv/
