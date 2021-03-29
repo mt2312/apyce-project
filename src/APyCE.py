@@ -208,6 +208,102 @@ class Model:
                             print("[+] Unrecognized keyword found {}".format(kw.group()))
                         self._unrec.append(kw.group())
 
+    def _read_dat(self, fn, verbose):
+        """
+        Read subset of BUILDER GRID file
+
+        The currently recognized keywords of ECLIPSE are:
+            'CORNERS', 'GRID CORNER', 'POR ALL', 'PERMI ALL'
+            'SO ALL'
+        and, we have a partial support for:
+            'NULL ALL'
+
+        Parameters
+        ----------
+        fn : str
+            String holding name of GRDECL specification
+
+        Returns
+        -------
+        This method does not return anything, just modify attributes of the class
+        """
+        self._model_helpers.file_open_exception(fn)
+
+        if not os.path.isabs(fn):
+            self._fname = os.path.abspath(fn)
+        self._basename = os.path.basename(self._fname)
+        self._dirname = os.path.dirname(self._fname)
+        fn = self._fname
+
+        if verbose:
+            print("[INPUT] Reading input BUILDER file...\n")
+
+        with open(fn) as f:
+            for line in f:
+                # Keyword pattern
+                kw = re.match('^[A-Z]+(?= ALL)|^[A-Z]+(?= CORNER)|^[A-Z]{7}$', str(line))
+
+                if kw is not None:
+                    if kw.group() == 'GRID CORNER':
+                        if verbose:
+                            print("[+] Reading keyword {}".format(kw.group()))
+                        if kw.group() not in self._keywords:
+                            self._keywords.append(kw.group())
+                        self._cart_dims = np.array(re.findall('\d+', str(line))[0:3], dtype=int)
+                        self._num_cell = np.prod(self._cart_dims)
+                    elif kw.group() == 'CORNERS':
+                        self._model_helpers.check_dim(self._cart_dims, self._num_cell, kw.group(), f)
+                        if verbose:
+                            print("[+] Reading keyword {}".format(kw.group()))
+                        self._coord = self._model_helpers.read_section_dat(f)
+                        if len(self._coord) == 6*(self._cart_dims[0]+1)*(self._cart_dims[1]+1):
+                            if kw.group() not in self._keywords:
+                                self._keywords.append(kw.group())
+                            self._coord = np.array(self._coord, dtype=float)
+                        else:
+                            print("[ERROR] CORNERS data size must be 6*(NX+1)*(NY+1)")
+                            assert len(self._coord) == 6*(self._cart_dims[0]+1)*(self._cart_dims[1]+1)
+                    elif kw.group() == 'POR ALL':
+                        self._model_helpers.check_dim(self._cart_dims, self._num_cell, kw.group(), f)
+                        if verbose:
+                            print("[+] Reading keyword {}".format(kw.group()))
+                        self._poro = self._model_helpers.read_section_dat(f)
+                        if len(self._poro) == self._num_cell:
+                            if kw.group() not in self._keywords:
+                                self._keywords.append(kw.group())
+                            self._poro = np.array(self._poro, dtype=float)
+                        else:
+                            print("[ERROR] POR ALL data size must be NX*NY*NZ")
+                            assert len(self._poro) == self._num_cell
+                    elif kw.group() == 'NULL ALL':
+                        self._model_helpers.check_dim(self._cart_dims, self._num_cell, kw.group(), f)
+                        if verbose:
+                            print("[+] Reading keyword {}".format(kw.group()))
+                        self._actnum = self._model_helpers.read_section_dat(f)
+                        if len(self._actnum) == self._num_cell:
+                            if kw.group() not in self._keywords:
+                                self._keywords.append(kw.group())
+                            self._actnum = np.array(self._actnum, dtype=int)
+                        else:
+                            print("[ERROR] NULL ALL data size must be NX*NY*NZ")
+                            assert len(self._actnum) == self._num_cell
+                    elif kw.group() == 'SO':
+                        self._model_helpers.check_dim(self._cart_dims, self._num_cell, kw.group(), f)
+                        if verbose:
+                            print("[+] Reading keyword {}".format(kw.group()))
+                        self._so = self._model_helpers.read_section_dat(f)
+                        if len(self._so) == self._num_cell:
+                            if kw.group() not in self._keywords:
+                                self._keywords.append(kw.group())
+                            self._so = np.array(self._so, dtype=float)
+                        else:
+                            print("[ERROR] SO data size must be NX*NY*NZ")
+                            assert len(self._so) == self._num_cell
+                    elif kw.group() not in self._unrec:
+                        if verbose:
+                            print("[+] Unrecognized keyword found {}".format(kw.group()))
+                        self._unrec.append(kw.group())
+
     def process_grdecl(self):
         """
         Compute grid topology and geometry from pillar grid description
