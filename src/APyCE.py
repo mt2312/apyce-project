@@ -208,6 +208,7 @@ class Model:
                             print("[+] Unrecognized keyword found {}".format(kw.group()))
                         self._unrec.append(kw.group())
 
+    # @TODO: Which is the Builder keyword for ZCORN?
     def _read_dat(self, fn, verbose):
         """
         Read subset of BUILDER GRID file
@@ -742,6 +743,7 @@ class _ModelHelpers:
                 break
         return section
 
+    # @TODO: Find a way to check if DAT block is ended
     def read_section_dat(self, file):
         """
         Read the section of data in the BUILDER input file
