@@ -646,35 +646,6 @@ class _ModelHelpers:
                 break
         return section
 
-    def read_section_dat(self, file):
-        """
-        Read the section of data in the BUILDER input file
-        and return the array of values
-
-        Parameters
-        ----------
-        file : file
-            BUILDER input file
-
-        Returns
-        -------
-        section
-            Array with values of the section
-        """
-        section = []
-        while True:
-            line = file.readline()
-            if line.startswith('**') or not line.strip():
-                # Ignore blank lines and comments
-                continue
-            values = self.expand_scalars(line)
-            section.extend(values)
-            # TODO: How to check if DAT block is ended? (GRDECL = /)
-            if section[-1] == -1:
-                section.pop()
-                break
-        return section
-
     def check_dim(self, cart_dims, num_cell, kw, file):
         """
         Check dimension of the grid
