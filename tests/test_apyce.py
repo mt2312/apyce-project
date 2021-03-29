@@ -30,11 +30,6 @@ class TestModel():
         assert isinstance(G, Model)
         assert G._n_collapsed == 544
 
-    '''
-    def test_process_dat(self):
-        return NULL
-    '''
-
     def test_load_cell_data(self):
         grid_file = 'Data/dome.grdecl'
         test_dir = os.path.dirname(__file__)
