@@ -1,9 +1,8 @@
 __pycache__/
 .vscode/
-src/__pycache__/
+src/apyce/__pycache__/
 .ipynb_checkpoints
 .idea/
-src/Data/Results
+tests/.pytest_cache/
 .pytest_cache
-src/test.py
 venv/
