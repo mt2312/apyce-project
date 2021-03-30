@@ -1,8 +1,6 @@
-import pytest
 import os
-import vtk
 
-from src.APyCE import Model
+from src.apyce.APyCE import Model
 
 
 class TestModel():
@@ -40,7 +38,7 @@ class TestModel():
         G.load_cell_data(load_file_path, 'TEMP')
         assert 'TEMP' in G._keywords
 
-    def test_write_vtk(self):
+    def test_write_vtu(self):
         grid_file = 'Data/dome.grdecl'
         test_dir = os.path.dirname(__file__)
         vtk_dir = os.path.dirname('Data/Results/')

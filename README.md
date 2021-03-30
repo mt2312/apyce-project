@@ -15,14 +15,20 @@ Mateus Tosta (mateustosta@outlook.com.br), Petroleum Engineering Modelling Labor
 This project is intended to develop an open-source Python implementation focused on post-processing 3D reservoir grid files for integration between the softwares CMG Builder and Schlumberger Eclipse
 
 ## Installation
+APyCE is developed under Python>=3.8
+
+To get the most current version, install from github:  
+    
+    git clone https://github.com/mateustosta/apyce-project.git
+    cd apyce-project
+
 #### Linux
 To setup the development environment do the following:
 
-    git clone https://github.com/mateustosta/apyce-project.git
-    cd apyce-project
-    virtualenv --python=python3 venv3
+    virtualenv --python=python3.8 venv3
     source venv3/bin/activate
     pip install -r requirements.txt
+    pip install .
 
 or, use Anaconda (https://www.anaconda.com/download/):  
 
@@ -39,20 +45,20 @@ Use Anaconda (https://www.anaconda.com/download/)
     
 ## Usage Linux
 ```python
-from APyCE import Model
+from apyce import Model
 
 G = Model(fn='./Data/PSY.grdecl', grid_origin='Eclipse', verbose=True)
 G.process_grdecl()
-G.write_vtk()
+G.write_vtu()
 ```
 
 ## Usage Windows
 ```python
-from APyCE import Model
+from apyce import Model
 
 G = Model(fn='.\\Data\\PSY.grdecl', grid_origin='Eclipse', verbose=True)
 G.process_grdecl()
-G.write_vtk()
+G.write_vtu()
 ```
 
 ## Contributing
