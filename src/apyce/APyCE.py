@@ -6,11 +6,28 @@ import vtk.util.numpy_support as np_support
 
 
 class Model:
+    r"""
+    Main class of the APyCE
+
+    Parameters
+    ----------
+    fn : string
+        String holding name of GRDECL/DAT specification
+    grid_origin : string (default is 'Eclipse')
+        String holding the grid origin (Eclipse/Builder)
+    verbose : boolean (default is True)
+        Emit messages to screen while processing
+    """
     def __init__(self, fn='data.txt', grid_origin='Eclipse', verbose=True):
         self._fname = fn
         self._basename = None
         self._dirname = None
+
         self._vtk_unstructured_grid = vtk.vtkUnstructuredGrid()
+
+        self._keywords = []
+        self._unrec = []
+        self._n_collapsed = 0
 
         self._cart_dims = []
         self._num_cell = None
@@ -22,9 +39,6 @@ class Model:
         self._permy = []
         self._permz = []
         self._so = []
-        self._keywords = []
-        self._unrec = []
-        self._n_collapsed = 0
 
         self._grid_origin = grid_origin
         self._model_helpers = _ModelHelpers()
@@ -33,8 +47,6 @@ class Model:
 
         if self._grid_origin == 'Eclipse':
             self._read_grdecl(self._fname, self._verbose)
-        else:
-            self._read_dat(self._fname, self._verbose)
 
     def __str__(self):
         structure = "\nMODEL DATA\n"
@@ -45,23 +57,17 @@ class Model:
         return structure
 
     def _read_grdecl(self, fn, verbose):
-        """
-        Read subset of ECLIPSE GRID file
-
+        r"""
+        Read subset of ECLIPSE grid file
+        
         The currently recognized keywords of ECLIPSE are:
             'COORD', 'SPECGRID', 'INCLUDE', 'PERMX', 'PERMY',
-            'PERMZ', 'PORO', 'ZCORN', 'SO'
-        and, we have a partial support for:
-            'ACTNUM'
+            'PERMZ', 'PORO', 'ZCORN', 'SO', and 'ACTNUM'
 
         Parameters
         ----------
-        fn : str
+        fn : string
             String holding name of GRDECL specification
-
-        Returns
-        -------
-        This method does not return anything, just modify attributes of the class
         """
         self._model_helpers.file_open_exception(fn)
 
@@ -209,16 +215,8 @@ class Model:
                         self._unrec.append(kw.group())
 
     def process_grdecl(self):
-        """
+        r"""
         Compute grid topology and geometry from pillar grid description
-
-        Parameters
-        ----------
-        This method does not have parameters
-
-        Returns
-        -------
-        This method does not return anything
         """
         print("\n[PROCESS] Converting GRDECL grid to Paraview VTK format...")
 
@@ -279,9 +277,14 @@ class Model:
 
         As we can see, the VTK indexes 2, 3, 6, and 7 are different from Eclipse.
 
-        See more:
-            https://vtk.org/wp-content/uploads/2015/04/file-formats.pdf (page 9 - VTK_HEXAHEDRON)
+        Notes
+        -----
+        https://vtk.org/wp-content/uploads/2015/04/file-formats.pdf (page 9 - VTK_HEXAHEDRON)
         '''
+        # Removes inactive cells (ACTNUM = 0)
+        if len(self._actnum) != 0:
+            self._remove_cells()
+
         cell_id = 0
         for k in range(nz):
             for j in range(ny):
@@ -305,7 +308,7 @@ class Model:
         self._update()
 
     def _get_cell_coords(self, i, j, k):
-        """
+        r"""
         Get XYZ coords for each node of a cell
 
         Parameters
@@ -403,7 +406,7 @@ class Model:
         return coord
 
     def _get_pillars(self, i, j):
-        """
+        r"""
         Obtain the pillars index in [COORD] and the pillars coord for each cell
 
         Parameters
@@ -485,7 +488,7 @@ class Model:
         return pillars
 
     def _get_zs(self, i, j, k):
-        """
+        r"""
         Get the Z index in ZCORN and Z coords for a cell, each cell have eight Zs (depth of nodes)
 
         Parameters
@@ -523,20 +526,32 @@ class Model:
 
         return [self._zcorn[x] for x in zs_idx]
 
-    def load_cell_data(self, fn, name):
+    def _remove_cells(self):
+        r"""
+        Remove the inactive cells of the model
+
+        Only works if exported to ParaView!
         """
+        ind = np.argwhere(self._actnum == 0)
+        ghost_cells = np.zeros(self._num_cell, np.uint8)
+        ghost_cells[ind] = vtk.vtkDataSetAttributes.DUPLICATECELL
+        self._vtk_unstructured_grid.AllocateCellGhostArray()
+        ghosts = self._vtk_unstructured_grid.GetCellGhostArray()
+        for i in ghost_cells:
+            ghosts.InsertNextTuple1(i)
+
+        #self._vtk_unstructured_grid.RemoveGhostCells()
+
+    def load_cell_data(self, fn, name):
+        r"""
         Read a file with data and append this data to model
 
         Parameters
         ----------
-        fn : str
+        fn : string
             String holding the name of the data file
-        name : str
+        name : string
             String holding the name of the property
-
-        Returns
-        -------
-        This method does not return anything, just modify attributes of the class
 
         Assuming that the data to be loaded is a reservoir
             property that has a value for each cell, we must have NX * NY * NZ values
@@ -556,16 +571,9 @@ class Model:
         self._update(data_array, name)
 
     def write_vtu(self):
-        """
-        Create a VTU file with all data of ECLIPSE/BUILDER file.
-
-        Parameters
-        ----------
-        This method does not have parameters
-
-        Returns
-        -------
-        This method does not return anything, just create the VTU file
+        r"""
+        Create a VTU file with all data of ECLIPSE/BUILDER file. The VTU file will be saved
+            on the directory 'Results' that will be created on the same directory than GRID file
         """
         fn = self._basename
         fn = fn.split('.')[0]
@@ -576,28 +584,24 @@ class Model:
         fn = self._dirname + fn
         fn = os.path.normpath(fn)
 
-        if not os.path.exists('.' + os.path.sep + 'Data' + os.path.sep + 'Results'):
-            os.makedirs('.' + os.path.sep + 'Data' + os.path.sep + 'Results')
+        if not os.path.exists(os.path.normpath(self._dirname + '/Results')):
+            os.makedirs(os.path.normpath(self._dirname + '/Results'))
         
-        xmlWriter = vtk.vtkXMLUnstructuredGridWriter()
-        xmlWriter.SetFileName(fn)
-        xmlWriter.SetInputData(self._vtk_unstructured_grid)
-        xmlWriter.Write()
+        xml_writer = vtk.vtkXMLUnstructuredGridWriter()
+        xml_writer.SetFileName(fn)
+        xml_writer.SetInputData(self._vtk_unstructured_grid)
+        xml_writer.Write()
 
     def _update(self, data_array=[], name='property'):
-        """
+        r"""
         This method update the data in the vtkUnsctructuredGrid.
 
-        Parameters (Optional)
+        Parameters
         ----------
         data_array : NumPy array (dtype=int or dtype=float)
             NumPy array holding the data of load_cell_data()
         name : str
             String holding the name of the property
-
-        Returns
-        -------
-        This method does not return anything
         """
         if len(self._actnum) != 0:
             self._model_helpers.np_to_vtk('ACTNUM', self._actnum, self._vtk_unstructured_grid, self._verbose)
@@ -619,7 +623,7 @@ class Model:
 ###################
 class _ModelHelpers:
     def read_section_grdecl(self, file):
-        """
+        r"""
         Read the section of data in the ECLIPSE input file
         and return the array of values
 
@@ -630,7 +634,7 @@ class _ModelHelpers:
 
         Returns
         -------
-        section
+        section : string array
             Array with values of the section
         """
         section = []
@@ -647,23 +651,19 @@ class _ModelHelpers:
         return section
 
     def check_dim(self, cart_dims, num_cell, kw, file):
-        """
+        r"""
         Check dimension of the grid
 
         Parameters
         ----------
-        cart_dims : NumPy array (dtype=int)
+        cart_dims : int array
             Dimensions of the grid
         num_cell : int
             Number of cells in the grid
-        kw : str
+        kw : string
             Keyword currently being read
         file : file
             Opened file with GRDECL specification
-
-        Returns
-        -------
-        This method does not return anything
         """
         if len(cart_dims) == 0 or num_cell is None or len([x for x in cart_dims if x < 1]) > 0:
             print("[ERROR] GRDECL keyword {} found before dimension specification".format(kw))
@@ -673,7 +673,7 @@ class _ModelHelpers:
             assert len([x for x in cart_dims if x < 1]) < 0
 
     def to_1d(self, i, j, k, nx, ny, nz):
-        """
+        r"""
         Convert index [HEIGHT, WIDTH, DEPTH] to a flat 3D matrix index [HEIGHT * WIDTH * DEPTH]
 
         If you have:
@@ -685,31 +685,30 @@ class _ModelHelpers:
         Flat[x + WIDTH * (y + DEPTH * z)] = Original[x, y, z] or
         Flat[(z * xMax * yMax) + (y * xMax) + x] = Original[x, y, z]
 
-        See more:
+        Notes
+        -----
         https://stackoverflow.com/questions/7367770/how-to-flatten-or-index-3d-array-in-1d-array/7367812
         """
         return (k * nx * ny) + (j * nx) + i
 
     def np_to_vtk(self, name, numpy_data, vtk_unstructured_grid, verbose):
-        """
+        r"""
         Convert the numpy array to vtk array and add this array to structure grid
 
         Parameters
         ----------
-        name : str
+        name : string
             Name of the property e.g. ACTNUM
         numpy_data : NumPy array (dtype=int or dtype=float)
             Array with values of the property
         vtk_unstructured_grid : vtk.vtkUnstructuredGrid() Object
             Object holding VTK Unstructured Grid
         verbose : Boolean
+            Emit messages to screen while processing
 
-        Returns
-        -------
-        This method does not return anything
-
-        See more:
-            https://pyscience.wordpress.com/2014/09/06/numpy-to-vtk-converting-your-numpy-arrays-to-vtk-arrays-and-files/
+        Notes
+        -----
+        https://pyscience.wordpress.com/2014/09/06/numpy-to-vtk-converting-your-numpy-arrays-to-vtk-arrays-and-files/
         """
         if verbose:
             print('\tInserting data [' + name + '] into vtk array')
@@ -719,7 +718,7 @@ class _ModelHelpers:
         vtk_unstructured_grid.GetCellData().AddArray(vtk_data)
 
     def expand_scalars(self, line):
-        """
+        r"""
         Expand the values of the format:
             2*3 => [3,3]
 
@@ -730,7 +729,7 @@ class _ModelHelpers:
 
         Returns
         -------
-        values : int[] or float[]
+        values : int array or float array
             Values expanded
         """
         values = []
@@ -744,17 +743,13 @@ class _ModelHelpers:
         return values
 
     def file_open_exception(self, fn=''):
-        """
+        r"""
         Try to open the file
 
         Parameters
         ----------
-        fn : str
-            String holding name of GRDECL specification.
-
-        Returns
-        -------
-        This method does not return anything
+        fn : string
+            String holding name of GRDECL/BUILDER specification.
         """
         try:
             file = open(fn, 'r')
