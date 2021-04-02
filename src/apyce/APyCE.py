@@ -3,6 +3,7 @@ import vtk
 import re
 import os
 import vtk.util.numpy_support as np_support
+import pyvista as pv
 
 
 class Model:
@@ -218,6 +219,11 @@ class Model:
         r"""
         Compute grid topology and geometry from pillar grid description
         """
+        # check if grid is already defined
+        if len(self._cart_dims) == 0:
+            print("[ERROR] Invoking process_grdecl before read_grdecl")
+            assert len(self._cart_dims) != 0
+
         print("\n[PROCESS] Converting GRDECL grid to Paraview VTK format...")
 
         points = vtk.vtkPoints()
@@ -249,7 +255,7 @@ class Model:
 
         print("\n[+] Creating VTK Cells...")
 
-        '''
+        r"""
         The VTK indexes elements differently than ECLIPSE.
             Therefore, we must convert indexes from ECLIPSE to VTK before creating the cells.
 
@@ -280,7 +286,7 @@ class Model:
         Notes
         -----
         https://vtk.org/wp-content/uploads/2015/04/file-formats.pdf (page 9 - VTK_HEXAHEDRON)
-        '''
+        """
         # Removes inactive cells (ACTNUM = 0)
         if len(self._actnum) != 0:
             self._remove_cells()
@@ -357,7 +363,7 @@ class Model:
 
         # Loop eight times for each cell (eight corners)
         for x in range(8):
-            '''
+            r"""
             Recover physical nodal coordinates along pillars
 
             We assume that all pillars are straight lines so linear interpolation is sufficient.
@@ -380,7 +386,7 @@ class Model:
             MRST performs this process only once, this is because the array [lines]
             already contain all the necessary coordinates, here in APyCE, 
             we will do the process cell by cell.
-            '''
+            """
             # p_idx -> [0,3]
             p_idx = x % 4
 
@@ -458,7 +464,7 @@ class Model:
         p3 = self._model_helpers.to_1d(i+1, j+1, 0, nx, ny, 0)
 
         # Get the pillar from [COORD]
-        '''
+        r"""
         In ECLIPSE, the [COORD] keyword follow the pattern below:
         1. A coordinate line (pillar) is specified by two triplets of
             X, Y, and Z coordinates, representing two distinct points on it
@@ -472,7 +478,7 @@ class Model:
             .
             .
             xtop ytop ztop xbtm ybtm zbtm
-        '''
+        """
         # Create an array with the four pillars' index
         pillars_idx = [p0, p1, p2, p3]
 
@@ -539,8 +545,6 @@ class Model:
         ghosts = self._vtk_unstructured_grid.GetCellGhostArray()
         for i in ghost_cells:
             ghosts.InsertNextTuple1(i)
-
-        #self._vtk_unstructured_grid.RemoveGhostCells()
 
     def load_cell_data(self, fn, name):
         r"""
@@ -617,6 +621,57 @@ class Model:
             self._model_helpers.np_to_vtk('SO', self._so, self._vtk_unstructured_grid, self._verbose)
         if len(data_array) != 0:
             self._model_helpers.np_to_vtk(name.upper(), data_array, self._vtk_unstructured_grid, self._verbose)
+
+    def plot_grid(self, filename='/Results/dome.vtu', lighting=False, property='PORO', show_edges=False, specular=0.0,
+                  specular_power=0.0, show_scalar_bar=True):
+        r"""
+        Plot the grid with PyVista
+
+        Parameters
+        ----------
+        filename : string
+            String holding the path to VTU file
+        lighting : bool
+            Enable or disable view direction lighting
+        property : string
+            String holding the name of property that will be plotted
+        show_edges : bool
+            Shows the edges of a mesh.  Does not apply to a wireframe
+            representation
+        specular : float
+            The specular lighting coefficient
+        specular_power : float, optional
+            The specular power. Between 0.0 and 128.0
+        show_scalar_bar : bool
+            If False, a scalar bar will not be added to the scene
+
+        Notes
+        -----
+        https://www.pyvista.org/
+        """
+        # Get the abs filepath normalized
+        filename = os.path.normpath(os.path.abspath(filename))
+
+        # Check if file exists
+        self._model_helpers.file_open_exception(filename)
+        
+        # Color map
+        pv.set_plot_theme("document")
+        
+        # Mesh to be plotted
+        mesh = pv.UnstructuredGrid(filename)
+
+        if 'ACTNUM' in mesh.array_names:
+            # Remove the ghost cells
+            ghosts = np.argwhere(mesh["ACTNUM"] < 1)
+            mesh.remove_cells(ghosts)
+
+        # Plot the grid
+        p = pv.Plotter()
+        p.add_mesh(mesh, lighting=lighting, specular=specular, specular_power=specular_power, show_edges=show_edges,
+                   scalars=property, show_scalar_bar=show_scalar_bar)
+        p.show()
+
 
 ###################
 # AUXILIARY CLASS #
