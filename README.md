@@ -47,19 +47,28 @@ Use Anaconda (https://www.anaconda.com/download/)
 ```python
 from apyce import Model
 
-G = Model(fn='./Data/PSY.grdecl', grid_origin='Eclipse', verbose=True)
+G = Model(fn='./Data/dome.grdecl', grid_origin='Eclipse', verbose=True)
 G.process_grdecl()
 G.write_vtu()
+G.plot_grid(filename='./Data/Results/dome.vtu', lighting=True, property='PORO', show_edges=True,
+            specular=0.5, specular_power=128, show_scalar_bar=True)
 ```
 
 ## Usage Windows
 ```python
 from apyce import Model
 
-G = Model(fn='.\\Data\\PSY.grdecl', grid_origin='Eclipse', verbose=True)
+G = Model(fn='.\\Data\\dome.grdecl', grid_origin='Eclipse', verbose=True)
 G.process_grdecl()
 G.write_vtu()
+G.plot_grid(filename='.\\Data\\Results\\dome.vtu', lighting=True, property='PORO', show_edges=True,
+            specular=0.5, specular_power=128, show_scalar_bar=True)
 ```
+
+Output of Getting_Started.py example
+<p align="center">
+  <img src = "./img/output_getting_started.png" width="100%">
+</p>
 
 ## Contributing
 
