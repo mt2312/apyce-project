@@ -1,3 +1,4 @@
 numpy>=1.19.2
 vtk>=8.2.0
 pyvista>=0.29.0
+matplotlib>=3.4.1
