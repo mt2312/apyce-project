@@ -1,7 +1,7 @@
-from apyce import Model
+import apyce as ap
 
-G = Model(fn='./Data/dome.grdecl', grid_origin='Eclipse', verbose=True)
-G.process_grdecl()
-G.write_vtu()
-G.plot_grid(filename='./Data/Results/dome.vtu', lighting=True, property='PORO', show_edges=True,
-            specular=0.5, specular_power=128, show_scalar_bar=True)
+G = ap.grid.Grid(filename='Data/dome.grdecl', grid_origin='eclipse', verbose=True)
+G.process_grid()
+G.export_data()
+G.plot_grid(filename='Results/dome.vtu', lighting=False, property='PORO', show_edges=True, specular=0.0,
+            specular_power=0.0, show_scalar_bar=True, cmap='viridis')

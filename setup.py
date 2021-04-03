@@ -3,7 +3,7 @@ import os
 from setuptools import setup
 
 about = {}
-ver_path = ('src/apyce/__version__.py')
+ver_path = ('apyce/__version__.py')
 with open(ver_path) as f:
     for line in f:
         if line.startswith('__version__'):
@@ -21,16 +21,22 @@ with open("requirements.txt") as f:
 setup(
     name='apyce',
     version=about['__version__'],
-    classifiers=['Development Status :: 2 - Pre-Alpha',
-                 'License :: OSI Approved :: BSD License',
-                 'Programming Language :: Python',
-                 'Topic :: Scientific/Engineering',
-                 'Topic :: Scientific/Engineering :: Visualization'],
+    classifiers=[
+        'Development Status :: 2 - Pre-Alpha',
+        'License :: OSI Approved :: BSD License',
+        'Programming Language :: Python',
+        'Topic :: Scientific/Engineering',
+        'Topic :: Scientific/Engineering :: Visualization'
+    ],
     install_requires=required,
     long_description=long_description,
     long_description_content_type='text/markdown',
-    packages = ['apyce'],
-    package_dir={'apyce': 'src/apyce'},
+    packages = [
+        'apyce',
+        'apyce.grid',
+        'apyce.io',
+        'apyce.utils'
+    ],
     url = 'https://github.com/mateustosta/apyce-project',
     license = 'BSD 3-Clause',
     author = 'Mateus Metzker Tosta',
