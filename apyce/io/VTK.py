@@ -34,7 +34,7 @@ class VTK:
         """
 
         # Create the 'Results' directory
-        results_dir = misc.create_results_directory(misc.get_basename(filename))
+        results_dir = misc.create_results_directory(misc.get_path(filename))
 
         if verbose:
             print("\n[OUTPUT] Writting ParaView file \"" + misc.get_basename(misc.get_basename(filename)).split('.')[0] + ".vtu\"")
@@ -94,7 +94,7 @@ class VTK:
         """
 
         if verbose:
-            print('\tInserting data [' + name + '] into vtk array')
+            print('\t[+] Inserting data [' + name + '] into vtk array')
 
         vtk_data = np_support.numpy_to_vtk(num_array=numpy_data.ravel(), deep=True, array_type=vtk.VTK_FLOAT)
         vtk_data.SetName(name)
