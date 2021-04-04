@@ -4,7 +4,7 @@ r"""
 
 ----
 
-This module contains functionality for exporting data between APyCE and VTK
+This module contains functionality for exporting data to VTK
 
 ----
 
