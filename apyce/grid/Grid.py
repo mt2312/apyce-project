@@ -67,8 +67,8 @@ class Grid:
     >>> G = ap.grid.Grid(filename='dome.grdecl', grid_origin='eclipse', verbose=True)
     >>> G.process_grid()
     >>> G.load_cell_data(filename='dome_Temperature.txt', name='TEMP')
-    >>> G.plot_grid(property='TEMP')
     >>> G.export_data()
+    >>> G.plot_grid(property='TEMP')
 
     """
 
@@ -114,8 +114,8 @@ class Grid:
     def __str__(self):
         header = "-" * 78
         lines = [header, "{0:<35s} {1}".format('keywords', 'value'), header,
-                 "{0:<35s {1}".format('cart_dims', self._cart_dims), "{0:<35s {1}".format('num_cell', self._num_cell),
-                 "{0:<35s {1}".format('keywords', self._keywords), "{0:<35s {1}".format('unrec', self._unrec), header]
+                 "{0:<35s} {1}".format('cart_dims', self._cart_dims), "{0:<35s} {1}".format('num_cell', self._num_cell),
+                 "{0:<35s} {1}".format('keywords', self._keywords), "{0:<35s} {1}".format('unrec', self._unrec), header]
         return "\n".join(lines)
 
     def _read_grdecl(self, filename, verbose):
@@ -153,13 +153,13 @@ class Grid:
                         if kw.group() not in self._keywords:
                             self._keywords.append(kw.group())
                         else:
-                            print(Errors.CART_DIMS_ERROR)
+                            print(Errors.CART_DIMS_ERROR.value)
                             sys.exit()
                         line = f.readline().strip()
                         self._cart_dims = np.array(re.findall('\d+', str(line))[0:3], dtype=int)
                         self._num_cell = np.prod(self._cart_dims)
                     elif kw.group() == 'DIMENS':
-                        print(Errors.DIMENS_ERROR)
+                        print(Errors.DIMENS_ERRORv.value)
                         sys.exit()
                     elif kw.group() == 'INCLUDE':
                         if verbose:
@@ -182,7 +182,7 @@ class Grid:
                             self._keywords.append(kw.group())
                         self._coord = self._read_section_grdecl(f)
                         # Check if self._coord have the correct number of values
-                        assert len(self._coord) == 6*(self._cart_dims[0]+1)*(self._cart_dims[1]+1),Errors.COORD_ERROR
+                        assert len(self._coord) == 6*(self._cart_dims[0]+1)*(self._cart_dims[1]+1),Errors.COORD_ERROR.value
                         self._coord = np.array(self._coord, dtype=float)
                     elif kw.group() == 'ZCORN':
                         # Check if grid is already defined
@@ -193,7 +193,7 @@ class Grid:
                             self._keywords.append(kw.group())
                         self._zcorn = self._read_section_grdecl(f)
                         # Check if self._zcorn have the correct number of values
-                        assert len(self._zcorn) == 8*self._num_cell,Errors.ZCORN_ERROR
+                        assert len(self._zcorn) == 8*self._num_cell,Errors.ZCORN_ERROR.value
                         self._zcorn = np.array(self._zcorn, dtype=float)
                     elif kw.group() == 'PORO':
                         # Check if grid is already defined
@@ -204,7 +204,7 @@ class Grid:
                             self._keywords.append(kw.group())
                         self._poro = self._read_section_grdecl(f)
                         # Check if self._poro have the correct number os values
-                        assert len(self._poro) == self._num_cell,Errors.PORO_ERROR
+                        assert len(self._poro) == self._num_cell,Errors.PORO_ERROR.value
                         self._poro = np.array(self._poro, dtype=float)
                     elif kw.group() == 'PERMX':
                         # Check if grid is already defined
@@ -215,7 +215,7 @@ class Grid:
                             self._keywords.append(kw.group())
                         self._permx = self._read_section_grdecl(f)
                         # Check if self._permx have the correct number of values
-                        assert len(self._permx) == self._num_cell,Errors.PERMX_ERROR
+                        assert len(self._permx) == self._num_cell,Errors.PERMX_ERROR.value
                         self._permx = np.array(self._permx, dtype=float)
                     elif kw.group() == 'PERMY':
                         # Check if grid is already defined
@@ -226,7 +226,7 @@ class Grid:
                             self._keywords.append(kw.group())
                         self._permy = self._read_section_grdecl(f)
                         # Check if self._permy have the correct number of values
-                        assert len(self._permy) == self._num_cell,Errors.PERMY_ERROR
+                        assert len(self._permy) == self._num_cell,Errors.PERMY_ERROR.value
                         self._permy = np.array(self._permy, dtype=float)
                     elif kw.group() == 'PERMZ':
                         # Check if grid is already defined
@@ -237,7 +237,7 @@ class Grid:
                             self._keywords.append(kw.group())
                         self._permz = self._read_section_grdecl(f)
                         # Check if self._permz have the correct number of values
-                        assert len(self._permz) == self._num_cell,Errors.PERMZ_ERROR
+                        assert len(self._permz) == self._num_cell,Errors.PERMZ_ERROR.value
                         self._permz = np.array(self._permz, dtype=float)
                     elif kw.group() == 'ACTNUM':
                         # Check if grid is already defined
@@ -248,7 +248,7 @@ class Grid:
                             self._keywords.append(kw.group())
                         self._actnum = self._read_section_grdecl(f)
                         # Check if self._actnum have the correct number of values
-                        assert len(self._actnum) == self._num_cell,Errors.ACTNUM_ERROR
+                        assert len(self._actnum) == self._num_cell,Errors.ACTNUM_ERROR.value
                         self._actnum = np.array(self._actnum, dtype=int)
                     elif kw.group() == 'SO':
                         # Check if grid is already defined
@@ -259,7 +259,7 @@ class Grid:
                             self._keywords.append(kw.group())
                         self._so = self._read_section_grdecl(f)
                         # Check if self._so have the correct number of values
-                        assert len(self._so) == self._num_cell,Errors.SO_ERROR
+                        assert len(self._so) == self._num_cell,Errors.SO_ERROR.value
                         self._so = np.array(self._so, dtype=float)
                     elif kw.group() not in self._unrec:
                         if verbose:
@@ -311,11 +311,12 @@ class Grid:
             data_array = self._read_section_grdecl(f)
             if name not in self._keywords:
                 self._keywords.append(name)
-            assert len(data_array) == self._num_cell,Errors.LOAD_CELL_DATA_ERROR.replace('{}',name)
+            assert len(data_array) == self._num_cell,Errors.LOAD_CELL_DATA_ERROR.value.replace('{}',name)
+            data_array = np.array(data_array, dtype=float)
 
         self._update(data_array, name)
 
-    def plot_grid(self, filename='/Results/dome.vtu', lighting=False, property='PORO', show_edges=True, specular=0.0,
+    def plot_grid(self, filename='Data/Results/dome.vtu', lighting=False, property='PORO', show_edges=True, specular=0.0,
                   specular_power=0.0, show_scalar_bar=True, cmap='viridis'):
         r"""
 
@@ -323,7 +324,7 @@ class Grid:
 
         Parameters
         ----------
-        filename : string, default is '/Results/dome.vtu'
+        filename : string, default is 'Data/Results/dome.vtu'
             String holding the path to VTU file.
         lighting : boolean, default is False
             Enable or disable view direction lighting.
