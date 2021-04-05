@@ -9,7 +9,7 @@ APyCE Project: A Python-based Builder/Eclipse wrapper for 3D visualization of re
 Mateus Tosta (mateustosta@outlook.com.br), Petroleum Engineering Modelling Laboratory, Federal University of Paraíba, João Pessoa, BR
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/mateustosta/apyce-project/master/img/PSY_Model.png" width="70%"></img>
+  <img src="https://raw.githubusercontent.com/mateustosta/apyce-project/master/img/PSY_Model.png" width="100%"></img>
 </p>
 
 This project is intended to develop an open-source Python implementation focused on post-processing 3D reservoir grid files for integration between the softwares CMG Builder and Schlumberger Eclipse
@@ -68,7 +68,7 @@ G.plot_grid(filename='Data\\Results\\dome.vtu', lighting=False, property='PORO',
 
 Output of Getting_Started.py example
 <p align="center">
-  <img src="https://raw.githubusercontent.com/mateustosta/apyce-project/master/img/DOME_PORO.png" width="50%"></img>
+  <img src="https://raw.githubusercontent.com/mateustosta/apyce-project/master/img/DOME_PORO.png" width="70%"></img>
 </p>
 
 ## Contributing
