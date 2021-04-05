@@ -6,3 +6,6 @@ apyce/__pycache__/
 tests/.pytest_cache/
 .pytest_cache
 venv/
+apyce.egg-info
+build
+dist
