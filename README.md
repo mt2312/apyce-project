@@ -68,7 +68,7 @@ G.plot_grid(filename='Data\\Results\\dome.vtu', lighting=False, property='PORO',
 
 Output of Getting_Started.py example
 <p align="center">
-  <img src = "./img/output_getting_started.png" width="70%">
+  <img src = "img/DOME_PORO.png" width="70%">
 </p>
 
 ## Contributing
