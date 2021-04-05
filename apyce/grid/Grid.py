@@ -68,7 +68,7 @@ class Grid:
     >>> G.process_grid()
     >>> G.load_cell_data(filename='dome_Temperature.txt', name='TEMP')
     >>> G.export_data()
-    >>> G.plot_grid(property='TEMP')
+    >>> G.plot_grid(filename='Results/dome.vtu', property='TEMP')
 
     """
 
@@ -99,17 +99,7 @@ class Grid:
         if self._grid_origin == 'eclipse':
             self._read_grdecl(self._filename, self._verbose)
         else:
-            #self._read_dat(self._filename, self._verbose)
             pass
-
-    @property
-    def get_filename(self):
-        r"""
-        Getter for filename
-
-        """
-
-        return self._filename
 
     def __str__(self):
         header = "-" * 78
@@ -148,6 +138,7 @@ class Grid:
 
                 if kw is not None:
                     if kw.group() == 'SPECGRID':
+                        self._grid_type = 'corner-point'
                         if verbose:
                             print("[+] Reading keyword SPECGRID")
                         if kw.group() not in self._keywords:
@@ -159,13 +150,12 @@ class Grid:
                         self._cart_dims = np.array(re.findall('\d+', str(line))[0:3], dtype=int)
                         self._num_cell = np.prod(self._cart_dims)
                     elif kw.group() == 'DIMENS':
+                        self._grid_type = 'cartesian'
                         print(Errors.DIMENS_ERRORv.value)
                         sys.exit()
                     elif kw.group() == 'INCLUDE':
                         if verbose:
                             print("[+] Reading keyword INCLUDE")
-                        if kw.group() not in self._keywords:
-                            self._keywords.append(kw.group())
                         line = f.readline()
                         inc_fn = misc.get_include_file(filename, line)
                         if verbose:
@@ -268,17 +258,19 @@ class Grid:
 
     def process_grid(self):
         r"""
-        Compute grid topology and geometry from pillar grid description.
+        Compute grid topology and geometry from grid description.
 
         """
 
         # Check if grid is already defined
         misc.check_grid(self._cart_dims, self._coord, self._zcorn)
 
-        if self._grid_origin == 'eclipse':
-            self._process_grdecl()
+        if self._grid_type == 'corner-point':
+            if self._grid_origin == 'eclipse':
+                self._process_grdecl()
+            else:
+                pass
         else:
-            # self._process_dat()
             pass
 
     def load_cell_data(self, filename, name):
@@ -296,6 +288,23 @@ class Grid:
         -----
         Assuming that the data to be loaded is a reservoir
             property that has a value for each cell, we must have NX * NY * NZ values
+
+        The file must not contain the keyword.
+
+        Examples
+        --------
+        1 0 1 0 1 0 1 1 0 1
+        1 0 0 0 0 0 0 0 0 1
+        ...
+        1 0 1 0 0 1 0 0 1 0
+
+        Do not use
+
+        ACTNUM
+        1 0 1 0 1 0 1 1 0 1
+        1 0 0 0 0 0 0 0 0 1
+        ...
+        1 0 1 0 0 1 0 0 1 0
 
         """
 
