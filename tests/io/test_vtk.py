@@ -40,4 +40,3 @@ class TestVTK():
         vtk_unstructured_grid = VTK()
         VTK.numpy_to_vtk(keyword, data_array, vtk_unstructured_grid, False)
         assert vtk_unstructured_grid.GetCellData().GetArray('PORO').GetSize() == 1600
-

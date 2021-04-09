@@ -9,7 +9,7 @@ class VTK:
     The Visualization Toolkit (VTK) format defined by Kitware and used by ParaView
 
     """
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls):
         return vtk.vtkUnstructuredGrid()
 
     @classmethod
@@ -37,7 +37,7 @@ class VTK:
         results_dir = misc.create_results_directory(misc.get_path(filename))
 
         if verbose:
-            print("\n[OUTPUT] Writting ParaView file \"" + misc.get_basename(misc.get_basename(filename)).split('.')[0] + ".vtu\"")
+            print("\n[OUTPUT] Writting ParaView file " + misc.get_basename(misc.get_basename(filename)).split('.')[0])
 
         xml_writer = vtk.vtkXMLUnstructuredGridWriter()
         xml_writer.SetFileName(results_dir + misc.get_basename(misc.get_basename(filename)).split('.')[0] + '.vtu')

@@ -18,7 +18,7 @@ class Grid:
     G._filename : string
         A string that holds the name (path) of the grid file.
     G._vtk_unstructured_grid : vtkUnstructuredGrid object
-        Object of the VTK library that will be used to store grid properties and export them to ParaView.
+        Object of the VTK library that will be used to store corner-point grid properties and export them to ParaView.
     G._keywords : list
         A list of strings that represents the recognized keywords found in the grid file.
     G._unrec : list
@@ -85,6 +85,10 @@ class Grid:
         self._num_cell = 0
         self._coord = []
         self._zcorn = []
+        self._tops = []
+        self._dx = []
+        self._dy = []
+        self._dz = []
         self._actnum = []
         self._poro = []
         self._permx = []
@@ -113,8 +117,9 @@ class Grid:
         Read subset of ECLIPSE grid file.
 
         The currently recognized keywords of ECLIPSE are:
-            'COORD', 'SPECGRID', 'INCLUDE', 'PERMX', 'PERMY',
-            'PERMZ', 'PORO', 'ZCORN', 'SO', and 'ACTNUM'.
+            'COORD', 'SPECGRID', 'DIMENS', 'DX', 'DY', 'DZ',
+            'TOPS', 'INCLUDE', 'PERMX', 'PERMY', 'PERMZ',
+            'PORO', 'ZCORN', 'SO', and 'ACTNUM'.
 
         Parameters
         ----------
@@ -151,8 +156,16 @@ class Grid:
                         self._num_cell = np.prod(self._cart_dims)
                     elif kw.group() == 'DIMENS':
                         self._grid_type = 'cartesian'
-                        print(Errors.DIMENS_ERRORv.value)
-                        sys.exit()
+                        if verbose:
+                            print("[+] Reading keyword DIMENS")
+                        if kw.group() not in self._keywords:
+                            self._keywords.append(kw.group())
+                        else:
+                            print(Errors.CART_DIMS_ERROR.value)
+                            sys.exit()
+                        line = f.readline().strip()
+                        self._cart_dims = np.array(re.findall('\d+', str(line))[0:3], dtype=int)
+                        self._num_cell = np.prod(self._cart_dims)
                     elif kw.group() == 'INCLUDE':
                         if verbose:
                             print("[+] Reading keyword INCLUDE")
@@ -251,6 +264,50 @@ class Grid:
                         # Check if self._so have the correct number of values
                         assert len(self._so) == self._num_cell,Errors.SO_ERROR.value
                         self._so = np.array(self._so, dtype=float)
+                    elif kw.group() == 'TOPS':
+                        # Check if grid is already defined
+                        misc.check_dim(self._cart_dims, self._num_cell, kw.group(), f)
+                        if verbose:
+                            print("[+] Reading keyword TOPS")
+                        if kw.group() not in self._keywords:
+                            self._keywords.append(kw.group())
+                        self._tops = self._read_section_grdecl(f)
+                        # Check if self._tops have the correct number of values
+                        assert len(self._tops) == self._num_cell, Errors.TOPS_ERROR.value
+                        self._tops = np.array(self._tops, dtype=float)
+                    elif kw.group() == 'DX':
+                        # Check if grid is already defined
+                        misc.check_dim(self._cart_dims, self._num_cell, kw.group(), f)
+                        if verbose:
+                            print("[+] Reading keyword DX")
+                        if kw.group() not in self._keywords:
+                            self._keywords.append(kw.group())
+                        self._dx = self._read_section_grdecl(f)
+                        # Check if self._tops have the correct number of values
+                        assert len(self._dx) == self._num_cell, Errors.DX_ERROR.value
+                        self._dx = np.array(self._dx, dtype=float)
+                    elif kw.group() == 'DY':
+                        # Check if grid is already defined
+                        misc.check_dim(self._cart_dims, self._num_cell, kw.group(), f)
+                        if verbose:
+                            print("[+] Reading keyword DY")
+                        if kw.group() not in self._keywords:
+                            self._keywords.append(kw.group())
+                        self._dy = self._read_section_grdecl(f)
+                        # Check if self._tops have the correct number of values
+                        assert len(self._dy) == self._num_cell, Errors.DY_ERROR.value
+                        self._dy = np.array(self._dy, dtype=float)
+                    elif kw.group() == 'DZ':
+                        # Check if grid is already defined
+                        misc.check_dim(self._cart_dims, self._num_cell, kw.group(), f)
+                        if verbose:
+                            print("[+] Reading keyword DZ")
+                        if kw.group() not in self._keywords:
+                            self._keywords.append(kw.group())
+                        self._dz = self._read_section_grdecl(f)
+                        # Check if self._tops have the correct number of values
+                        assert len(self._dz) == self._num_cell, Errors.DZ_ERROR.value
+                        self._dz = np.array(self._dz, dtype=float)
                     elif kw.group() not in self._unrec:
                         if verbose:
                             print("[+] Unrecognized keyword found {}".format(kw.group()))
@@ -263,15 +320,21 @@ class Grid:
         """
 
         # Check if grid is already defined
-        misc.check_grid(self._cart_dims, self._coord, self._zcorn)
+        if self._grid_type == 'corner-point':
+            misc.check_corner_point_grid(self._cart_dims, self._coord, self._zcorn)
+        else:
+            misc.check_cartesian_grid(self._cart_dims, self._dx, self._dy, self._dz, self._tops)
 
         if self._grid_type == 'corner-point':
             if self._grid_origin == 'eclipse':
-                self._process_grdecl()
+                self._process_grdecl_corner_point()
             else:
                 pass
         else:
-            pass
+            if self._grid_origin == 'eclipse':
+                self._process_grdecl_block_centred()
+            else:
+                pass
 
     def load_cell_data(self, filename, name):
         r"""
@@ -312,7 +375,11 @@ class Grid:
         misc.file_open_exception(filename)
 
         # Check if grid is already defined
-        misc.check_grid(self._cart_dims, self._coord, self._zcorn)
+        if self._grid_type == 'corner-point':
+            misc.check_corner_point_grid(self._cart_dims, self._coord, self._zcorn)
+        else:
+            misc.check_cartesian_grid(self._cart_dims, self._dx, self._dy, self._dz, self._tops)
+
 
         with open(misc.get_path(filename)) as f:
             if self._verbose:
@@ -363,7 +430,10 @@ class Grid:
         misc.file_open_exception(filename)
 
         # Check if grid is already defined
-        misc.check_grid(self._cart_dims, self._coord, self._zcorn)
+        if self._grid_type == 'corner-point':
+            misc.check_corner_point_grid(self._cart_dims, self._coord, self._zcorn)
+        else:
+            misc.check_cartesian_grid(self._cart_dims, self._dx, self._dy, self._dz, self._tops)
 
         # Set theme
         pv.set_plot_theme("document")
@@ -421,14 +491,48 @@ class Grid:
                 break
         return section
 
-    def _process_grdecl(self):
+    def _process_grdecl_corner_point(self):
         r"""
         Compute grid topology and geometry from ECLIPSE pillar grid description.
+
+        Notes
+        -----
+        The VTK Hexahedron indexes elements differently than ECLIPSE.
+
+        Therefore, we must convert indexes from ECLIPSE to VTK Hexahedron before creating the cells.
+
+        ECLIPSE:
+           6 --------- 7
+          /|          /|
+         / |         / |
+        4 --------- 5  |
+        |  |        |  |
+        |  2 -------|- 3
+        | /         | /
+        |/          |/
+        0 --------- 1
+
+        VTK Hexahedron:
+           7 --------- 6
+          /|          /|
+         / |         / |
+        4 --------- 5  |
+        |  |        |  |
+        |  3 -------|- 2
+        | /         | /
+        |/          |/
+        0 --------- 1
+
+        As we can see, the VTK Hexahedron indexes 2, 3, 6, and 7 are different from Eclipse.
+
+        See also
+        --------
+        https://vtk.org/wp-content/uploads/2015/04/file-formats.pdf (page 9 - VTK_HEXAHEDRON)
 
         """
 
         if self._verbose:
-            print("\n[PROCESS] Converting GRDECL grid to ParaView VTU format")
+            print("\n[PROCESS] Converting GRDECL corner-point grid to ParaView VTU format")
 
         points = VTK.create_points()
         points.SetNumberOfPoints(8*np.prod(self._cart_dims))  # 2*NX*2*NY*2*NZ
@@ -461,43 +565,6 @@ class Grid:
 
             print("\n[+] Creating VTK Cells")
 
-        r"""
-        Notes
-        -----
-        The VTK indexes elements differently than ECLIPSE.
-        
-        Therefore, we must convert indexes from ECLIPSE to VTK before creating the cells.
-
-        ECLIPSE:
-           6 --------- 7
-          /|          /|
-         / |         / |
-        4 --------- 5  |
-        |  |        |  |
-        |  2 -------|- 3
-        | /         | /
-        |/          |/
-        0 --------- 1
-
-        VTK:
-           7 --------- 6
-          /|          /|
-         / |         / |
-        4 --------- 5  |
-        |  |        |  |
-        |  3 -------|- 2
-        | /         | /
-        |/          |/
-        0 --------- 1
-
-        As we can see, the VTK indexes 2, 3, 6, and 7 are different from Eclipse.
-
-        Notes
-        -----
-        https://vtk.org/wp-content/uploads/2015/04/file-formats.pdf (page 9 - VTK_HEXAHEDRON)
-        
-        """
-
         # Removes inactive cells (ACTNUM = 0)
         if len(self._actnum) != 0:
             self._remove_cells()
@@ -523,6 +590,72 @@ class Grid:
 
         # Set the properties to the vtk array
         self._update()
+
+    def _process_grdecl_block_centred(self):
+        r"""
+        Compute grid topology and geometry from ECLIPSE cartesian (block-centred) grid description.
+
+        """
+
+        if self._verbose:
+            print("\n[PROCESS] Converting GRDECL cartesian grid to corner-point grid")
+
+        # Create a cartesian grid
+        self.cartesian_grdecl()
+
+        # Process the grid that have been converted
+        # into a corner-point grid
+        self._process_grdecl_corner_point()
+
+    def cartesian_grdecl(self):
+        r"""
+        Construct Cartesian grid
+
+        Notes
+        -----
+        See cartesianGrdecl.m on MRST
+
+        """
+
+        xi = np.arange(self._cart_dims[0]+1, dtype=int)
+        yi = np.arange(self._cart_dims[1]+1, dtype=int)
+        zi = np.arange(self._cart_dims[2]+1, dtype=int)
+
+        # Create depthz
+        depthz = np.zeros([len(xi), len(yi)], dtype=int)
+
+        # Recover Grid Specification
+        cart_dims = np.array([len(xi) - 1, len(yi) - 1, len(zi) - 1])
+        X, Y, Z = np.meshgrid(xi, yi, zi, indexing="ij")  # numpy equivalent to MATLAB ndgrid()
+        rep = np.reshape(depthz, cart_dims[0:2] + 1, order="F")  # order equals to MATLAB
+        Z = np.add(Z, np.reshape(rep, [len(xi), len(yi), 1], order="F"))
+        Z = np.array([i for i in Z], dtype=int, order="F")
+
+        # Make Pillars
+        n = np.prod(cart_dims[0:2] + 1)
+        lines = np.zeros([n, 6], dtype=int)
+        lines[:, [0, 3]] = np.reshape(X[:, :, [0, -1]], [n, 2], order="F")
+        lines[:, [1, 4]] = np.reshape(Y[:, :, [0, -1]], [n, 2], order="F")
+        lines[:, [2, 5]] = np.reshape(Z[:, :, [0, -1]], [n, 2], order="F")
+
+        # Calculate the coordinates
+        coord = np.reshape(lines.T, (6*(cart_dims[0]+1)*(cart_dims[1]+1), 1), order="F")
+
+        # Assign z-coordinates
+        # ind(d) == [1, 1, 2, 2, 3, ..., dims(d), dims(d), dims(d)+1]
+        ind = lambda d: 1 + np.fix(np.arange(1, 2 * cart_dims[d] + 1, dtype=int) / 2)
+
+        ind_x = np.array([i - 1 for i in ind(0)], dtype=int, order="F")
+        ind_y = np.array([i - 1 for i in ind(1)], dtype=int, order="F")
+        ind_z = np.array([i - 1 for i in ind(2)], dtype=int, order="F")
+
+        ixgrid = np.ix_(ind_x, ind_y, ind_z)
+
+        zcorn = np.reshape(Z[ixgrid], (8 * np.prod(cart_dims), 1), order="F")
+
+        # Assign data to Grid object
+        self._coord = coord
+        self._zcorn = zcorn
 
     def _get_cell_coords(self, i, j, k):
         r"""
@@ -772,7 +905,7 @@ class Grid:
         if len(self._actnum) != 0:
             VTK.numpy_to_vtk('ACTNUM', self._actnum, self._vtk_unstructured_grid, self._verbose)
         if len(self._permx) != 0:
-            VTK.numpy_to_vtk('PERMX', self._permx, self._vtk_unstructured_grid, self._verbose)
+             VTK.numpy_to_vtk('PERMX', self._permx, self._vtk_unstructured_grid, self._verbose)
         if len(self._permy) != 0:
             VTK.numpy_to_vtk('PERMY', self._permy, self._vtk_unstructured_grid, self._verbose)
         if len(self._permz) != 0:

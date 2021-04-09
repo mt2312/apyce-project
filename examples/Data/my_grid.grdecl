@@ -1,0 +1,18 @@
+DIMENS
+20 20 4 /
+
+TOPS
+800*0 800*16
+/
+
+DX
+1600*20 /
+
+DY
+1600*10 /
+
+DZ
+1600*2 /
+
+INCLUDE
+'MYGRID/mygrid_poro.dat' /
