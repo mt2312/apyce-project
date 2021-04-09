@@ -103,9 +103,9 @@ def check_dim(cart_dims, num_cell, keyword, file):
         sys.exit()
 
 
-def check_grid(cart_dims, coord, zcorn):
+def check_corner_point_grid(cart_dims, coord, zcorn):
     r"""
-    Check if grid is already defined.
+    Check if corner-point grid is already defined.
 
     Parameters
     ----------
@@ -121,6 +121,31 @@ def check_grid(cart_dims, coord, zcorn):
     assert len(cart_dims) != 0,Errors.GRID_NOT_DEFINED_ERROR
     assert len(coord) != 0,Errors.GRID_NOT_DEFINED_ERROR
     assert len(zcorn) != 0,Errors.GRID_NOT_DEFINED_ERROR
+
+def check_cartesian_grid(cart_dims, dx, dy, dz, tops):
+    r"""
+    Check if cartesian grid is already defined.
+
+    Parameters
+    ----------
+    cart_dims : ndarray
+        Dimensions of the grid.
+    dx : ndarray
+        A list of integer point numbers that represents the DX keyword from Schlumberger Eclipse.
+    dy : ndarray
+        A list of integer point numbers that represents the DY keyword from Schlumberger Eclipse.
+    dz : ndarray
+        A list of integer point numbers that represents the DZ keyword from Schlumberger Eclipse.
+    tops : ndarray
+        A list of integer point numbers that represents the TOPS keyword from Schlumberger Eclipse.
+
+    """
+
+    assert len(cart_dims) != 0,Errors.GRID_NOT_DEFINED_ERROR
+    assert len(dx) != 0,Errors.GRID_NOT_DEFINED_ERROR
+    assert len(dy) != 0,Errors.GRID_NOT_DEFINED_ERROR
+    assert len(dz) != 0, Errors.GRID_NOT_DEFINED_ERROR
+    assert len(tops) != 0, Errors.GRID_NOT_DEFINED_ERROR
 
 
 def create_results_directory(filename=''):
