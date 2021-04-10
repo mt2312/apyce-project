@@ -37,7 +37,7 @@ class VTK:
         results_dir = misc.create_results_directory(misc.get_path(filename))
 
         if verbose:
-            print("\n[OUTPUT] Writting ParaView file " + misc.get_basename(misc.get_basename(filename)).split('.')[0])
+            print("\n[OUTPUT] Writting ParaView file \"" + misc.get_basename(misc.get_basename(filename)).split('.')[0] + ".vtu\"")
 
         xml_writer = vtk.vtkXMLUnstructuredGridWriter()
         xml_writer.SetFileName(results_dir + misc.get_basename(misc.get_basename(filename)).split('.')[0] + '.vtu')
