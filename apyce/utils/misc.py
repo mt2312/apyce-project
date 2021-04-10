@@ -1,7 +1,6 @@
 from apyce.utils import Errors
 
 import os
-import sys
 
 def file_open_exception(filename=''):
     r"""
@@ -17,10 +16,8 @@ def file_open_exception(filename=''):
     try:
         file = open(get_path(filename), 'r')
         file.close()
-    except IOError:
-        print("[ERROR] Can't open the file {}".format(get_path(filename)))
-        sys.exit()
-
+    except OSError:
+        raise FileNotFoundError(Errors.Errors.FILE_NOT_FOUND_ERROR.value.replace('{}',get_path(filename)))
 
 def get_path(filename=''):
     r"""
@@ -98,10 +95,7 @@ def check_dim(cart_dims, num_cell, keyword, file):
     """
 
     if len(cart_dims) == 0 or num_cell is None or len([x for x in cart_dims if x < 1]) > 0:
-        print(Errors.CHECK_DIM_ERRROR.replace('{}', keyword))
-        file.close()
-        sys.exit()
-
+        raise ValueError(Errors.Errors.CHECK_DIM_ERRROR.value.replace('{}', keyword))
 
 def check_corner_point_grid(cart_dims, coord, zcorn):
     r"""
@@ -118,9 +112,8 @@ def check_corner_point_grid(cart_dims, coord, zcorn):
 
     """
 
-    assert len(cart_dims) != 0,Errors.GRID_NOT_DEFINED_ERROR
-    assert len(coord) != 0,Errors.GRID_NOT_DEFINED_ERROR
-    assert len(zcorn) != 0,Errors.GRID_NOT_DEFINED_ERROR
+    if len(cart_dims) == 0 or len(coord) == 0 or len(zcorn) == 0:
+        raise ValueError(Errors.Errors.GRID_NOT_DEFINED_ERROR.value)
 
 def check_cartesian_grid(cart_dims, dx, dy, dz, tops):
     r"""
@@ -141,12 +134,8 @@ def check_cartesian_grid(cart_dims, dx, dy, dz, tops):
 
     """
 
-    assert len(cart_dims) != 0,Errors.GRID_NOT_DEFINED_ERROR
-    assert len(dx) != 0,Errors.GRID_NOT_DEFINED_ERROR
-    assert len(dy) != 0,Errors.GRID_NOT_DEFINED_ERROR
-    assert len(dz) != 0, Errors.GRID_NOT_DEFINED_ERROR
-    assert len(tops) != 0, Errors.GRID_NOT_DEFINED_ERROR
-
+    if len(cart_dims) == 0 or len(dx) == 0 or len(dy) == 0 or len(dz) == 0 or len(tops) == 0:
+        raise ValueError(Errors.Errors.GRID_NOT_DEFINED_ERROR.value)
 
 def create_results_directory(filename=''):
     r"""

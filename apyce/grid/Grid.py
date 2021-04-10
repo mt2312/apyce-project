@@ -4,7 +4,6 @@ from apyce.io import VTK
 import numpy as np
 
 import re
-import sys
 
 
 class Grid:
@@ -149,8 +148,7 @@ class Grid:
                         if kw.group() not in self._keywords:
                             self._keywords.append(kw.group())
                         else:
-                            print(Errors.CART_DIMS_ERROR.value)
-                            sys.exit()
+                            raise RuntimeError(Errors.Errors.CART_DIMS_ERROR.value)
                         line = f.readline().strip()
                         self._cart_dims = np.array(re.findall('\d+', str(line))[0:3], dtype=int)
                         self._num_cell = np.prod(self._cart_dims)
@@ -161,8 +159,7 @@ class Grid:
                         if kw.group() not in self._keywords:
                             self._keywords.append(kw.group())
                         else:
-                            print(Errors.CART_DIMS_ERROR.value)
-                            sys.exit()
+                            raise RuntimeError(Errors.Errors.CART_DIMS_ERROR.value)
                         line = f.readline().strip()
                         self._cart_dims = np.array(re.findall('\d+', str(line))[0:3], dtype=int)
                         self._num_cell = np.prod(self._cart_dims)
@@ -185,7 +182,8 @@ class Grid:
                             self._keywords.append(kw.group())
                         self._coord = self._read_section_grdecl(f)
                         # Check if self._coord have the correct number of values
-                        assert len(self._coord) == 6*(self._cart_dims[0]+1)*(self._cart_dims[1]+1),Errors.COORD_ERROR.value
+                        if len(self._coord) != 6*(self._cart_dims[0]+1)*(self._cart_dims[1]+1):
+                            raise ValueError(Errors.Errors.COORD_ERROR.value)
                         self._coord = np.array(self._coord, dtype=float)
                     elif kw.group() == 'ZCORN':
                         # Check if grid is already defined
@@ -196,7 +194,8 @@ class Grid:
                             self._keywords.append(kw.group())
                         self._zcorn = self._read_section_grdecl(f)
                         # Check if self._zcorn have the correct number of values
-                        assert len(self._zcorn) == 8*self._num_cell,Errors.ZCORN_ERROR.value
+                        if len(self._zcorn) != 8*self._num_cell:
+                            raise ValueError(Errors.Errors.ZCORN_ERROR.value)
                         self._zcorn = np.array(self._zcorn, dtype=float)
                     elif kw.group() == 'PORO':
                         # Check if grid is already defined
@@ -207,7 +206,8 @@ class Grid:
                             self._keywords.append(kw.group())
                         self._poro = self._read_section_grdecl(f)
                         # Check if self._poro have the correct number os values
-                        assert len(self._poro) == self._num_cell,Errors.PORO_ERROR.value
+                        if len(self._poro) != self._num_cell:
+                            raise ValueError(Errors.Errors.PORO_ERROR.value)
                         self._poro = np.array(self._poro, dtype=float)
                     elif kw.group() == 'PERMX':
                         # Check if grid is already defined
@@ -218,7 +218,8 @@ class Grid:
                             self._keywords.append(kw.group())
                         self._permx = self._read_section_grdecl(f)
                         # Check if self._permx have the correct number of values
-                        assert len(self._permx) == self._num_cell,Errors.PERMX_ERROR.value
+                        if len(self._permx) != self._num_cell:
+                            raise ValueError(Errors.Errors.PERMX_ERROR.value)
                         self._permx = np.array(self._permx, dtype=float)
                     elif kw.group() == 'PERMY':
                         # Check if grid is already defined
@@ -229,7 +230,8 @@ class Grid:
                             self._keywords.append(kw.group())
                         self._permy = self._read_section_grdecl(f)
                         # Check if self._permy have the correct number of values
-                        assert len(self._permy) == self._num_cell,Errors.PERMY_ERROR.value
+                        if len(self._permy) != self._num_cell:
+                            raise ValueError(Errors.Errors.PERMY_ERROR.value)
                         self._permy = np.array(self._permy, dtype=float)
                     elif kw.group() == 'PERMZ':
                         # Check if grid is already defined
@@ -240,7 +242,8 @@ class Grid:
                             self._keywords.append(kw.group())
                         self._permz = self._read_section_grdecl(f)
                         # Check if self._permz have the correct number of values
-                        assert len(self._permz) == self._num_cell,Errors.PERMZ_ERROR.value
+                        if len(self._permz) != self._num_cell:
+                            raise ValueError(Errors.Errors.PERMZ_ERROR.value)
                         self._permz = np.array(self._permz, dtype=float)
                     elif kw.group() == 'ACTNUM':
                         # Check if grid is already defined
@@ -251,7 +254,8 @@ class Grid:
                             self._keywords.append(kw.group())
                         self._actnum = self._read_section_grdecl(f)
                         # Check if self._actnum have the correct number of values
-                        assert len(self._actnum) == self._num_cell,Errors.ACTNUM_ERROR.value
+                        if len(self._actnum) != self._num_cell:
+                            raise ValueError(Errors.Errors.ACTNUM_ERROR.value)
                         self._actnum = np.array(self._actnum, dtype=int)
                     elif kw.group() == 'SO':
                         # Check if grid is already defined
@@ -262,7 +266,8 @@ class Grid:
                             self._keywords.append(kw.group())
                         self._so = self._read_section_grdecl(f)
                         # Check if self._so have the correct number of values
-                        assert len(self._so) == self._num_cell,Errors.SO_ERROR.value
+                        if len(self._so) != self._num_cell:
+                            raise ValueError(Errors.Errors.SO_ERROR.value)
                         self._so = np.array(self._so, dtype=float)
                     elif kw.group() == 'TOPS':
                         # Check if grid is already defined
@@ -273,7 +278,8 @@ class Grid:
                             self._keywords.append(kw.group())
                         self._tops = self._read_section_grdecl(f)
                         # Check if self._tops have the correct number of values
-                        assert len(self._tops) == self._num_cell, Errors.TOPS_ERROR.value
+                        if len(self._tops) != self._num_cell:
+                            raise ValueError(Errors.Errors.TOPS_ERROR.value)
                         self._tops = np.array(self._tops, dtype=float)
                     elif kw.group() == 'DX':
                         # Check if grid is already defined
@@ -284,7 +290,8 @@ class Grid:
                             self._keywords.append(kw.group())
                         self._dx = self._read_section_grdecl(f)
                         # Check if self._tops have the correct number of values
-                        assert len(self._dx) == self._num_cell, Errors.DX_ERROR.value
+                        if len(self._dx) != self._num_cell:
+                            raise ValueError(Errors.Errors.DX_ERROR.value)
                         self._dx = np.array(self._dx, dtype=float)
                     elif kw.group() == 'DY':
                         # Check if grid is already defined
@@ -295,7 +302,8 @@ class Grid:
                             self._keywords.append(kw.group())
                         self._dy = self._read_section_grdecl(f)
                         # Check if self._tops have the correct number of values
-                        assert len(self._dy) == self._num_cell, Errors.DY_ERROR.value
+                        if len(self._dy) != self._num_cell:
+                            raise ValueError(Errors.Errors.DY_ERROR.value)
                         self._dy = np.array(self._dy, dtype=float)
                     elif kw.group() == 'DZ':
                         # Check if grid is already defined
@@ -306,7 +314,8 @@ class Grid:
                             self._keywords.append(kw.group())
                         self._dz = self._read_section_grdecl(f)
                         # Check if self._tops have the correct number of values
-                        assert len(self._dz) == self._num_cell, Errors.DZ_ERROR.value
+                        if len(self._dz) != self._num_cell:
+                            raise ValueError(Errors.Errors.DZ_ERROR.value)
                         self._dz = np.array(self._dz, dtype=float)
                     elif kw.group() not in self._unrec:
                         if verbose:
@@ -387,7 +396,8 @@ class Grid:
             data_array = self._read_section_grdecl(f)
             if name not in self._keywords:
                 self._keywords.append(name)
-            assert len(data_array) == self._num_cell,Errors.LOAD_CELL_DATA_ERROR.value.replace('{}',name)
+            if len(data_array) != self._num_cell:
+                raise ValueError(Errors.Errors.LOAD_CELL_DATA_ERROR.value.replace('{}', name))
             data_array = np.array(data_array, dtype=float)
 
         self._update(data_array, name)
@@ -601,13 +611,13 @@ class Grid:
             print("\n[PROCESS] Converting GRDECL cartesian grid to corner-point grid")
 
         # Create a cartesian grid
-        self.cartesian_grdecl()
+        self._cart_grid()
 
         # Process the grid that have been converted
         # into a corner-point grid
         self._process_grdecl_corner_point()
 
-    def cartesian_grdecl(self):
+    def _cart_grid(self):
         r"""
         Construct Cartesian grid
 
@@ -629,7 +639,7 @@ class Grid:
         X, Y, Z = np.meshgrid(xi, yi, zi, indexing="ij")  # numpy equivalent to MATLAB ndgrid()
         rep = np.reshape(depthz, cart_dims[0:2] + 1, order="F")  # order equals to MATLAB
         Z = np.add(Z, np.reshape(rep, [len(xi), len(yi), 1], order="F"))
-        Z = np.array([i for i in Z], dtype=int, order="F")
+        Z = np.array(Z, dtype=int, order="F")
 
         # Make Pillars
         n = np.prod(cart_dims[0:2] + 1)
