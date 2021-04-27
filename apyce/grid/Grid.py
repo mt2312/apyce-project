@@ -389,7 +389,6 @@ class Grid:
         else:
             misc.check_cartesian_grid(self._cart_dims, self._dx, self._dy, self._dz, self._tops)
 
-
         with open(misc.get_path(filename)) as f:
             if self._verbose:
                 print("[+] Reading keyword {}".format(name))
@@ -405,7 +404,6 @@ class Grid:
     def plot_grid(self, filename='Data/Results/dome.vtu', lighting=False, property='PORO', show_edges=True, specular=0.0,
                   specular_power=0.0, show_scalar_bar=True, cmap='viridis'):
         r"""
-
         Plot the grid with PyVista.
 
         Parameters
@@ -605,21 +603,192 @@ class Grid:
         r"""
         Compute grid topology and geometry from ECLIPSE cartesian (block-centred) grid description.
 
+        ECLIPSE Grid block
+
+                +-----------> I
+               /|
+              / |     0 --------- 1
+             /  |    /|          /|
+          J v   |   / |         / |
+                |  2 --------- 3  |
+              K v  |  |        |  |
+                   |  4 -------|- 5
+                   | /         | /
+                   |/          |/
+                   6 --------- 7
+
+
+
+                        Top edge
+                    a-----------------b
+                    |                 |
+         Left edge  |    reservoir    | right edge
+                    |    (top view)   |
+                    c-----------------d
+                        bottom edge
+
+
+        1. The cell is in one corner of the reservoir
+            =========ON TOP=========
+            1.1. Left Corners
+                a. i = 0, j = 0, and k = 0
+                    1. The cell has 3 neighbors: Cell(0, 0, 1), Cell(1, 0, 0), and Cell(0, 1, 0)
+                c. i = 0, j = NY-1, and k = 0
+                    1. The cell has 3 neighbors: Cell(0, NY-1, 1), Cell(1, NY-1, 0), and Cell(0, NY-2, 0)
+            1.2. Right Corners
+                b. i = NX-1, j = 0, and k = 0
+                    1. The cell has 3 neighbors: Cell(NX-1, 0, 1), Cell(NX-2, 0, 0), and Cell(NX-1, 1, 0)
+                d. i = NX-1, j = NY-1, and k = 0
+                    1. The cell has 3 neighbors: Cell(NX-1, DY-1, 1), Cell(NX-2, 0, 0), and Cell(NX-1, NY-2, 0)
+
+            =========ON BOTTOM=========
+            1.3. Left Corners
+                a. i = 0, j = 0, and k = NZ-1
+                    1. The cell has 3 neighbors: Cell(0, 0, NZ-2), Cell(1, 0, NZ-1), and Cell(0, 1, NZ-1)
+                c. i = 0, j = NY-1, and k = NZ-1
+                    1. The cell has 3 neighbors: Cell(0, NY-1, NZ-2), Cell(1, NY-1, NZ-1), and Cell(0, NY-2, NZ-1)
+            1.4. Right Corners
+                b. i = NX-1, j = 0, and k = NZ-1
+                    1. The cell has 3 neighbors: Cell(NX-1, 0, NZ-2), Cell(NX-2, 0, NZ-1), and Cell(0, 1, NZ-1)
+                d. i = NX-1, j = NY-1, and k = NZ-1
+                    1. The cell has 3 neighbors: Cell(NX-1, NY-1, NZ-2), Cell(NX-2, NY-1, NZ-1), and Cell(NX-1, NY-2, NZ-1)
+
+        2. The cell is at the edge of the reservoir (with the exception of the corners)
+            =========ON TOP=========
+            a. Left edge
+                1. i = 0, j = ]0,NY-1[, k = 0
+                    a. The cell has 4 neighbors: Cell(0, j, 1), Cell(1, j, 0), Cell(0, j-1, 0), and Cell(0, j+1, 0)
+            b. Top edge
+                1. i = ]0,NX-1[, j = 0, k = 0
+                    a. The cell has 4 neighbors: Cell(i, 0, 1), Cell(i, 1, 0), Cell(i-1, 0, 0), and Cell(i+1, 0, 0)
+            c. Right edge
+                1. i = NX-1, j = ]0,NY-1[, k = 0
+                    a. The cell has 4 neighbors: Cell(NX-1, j, 1), Cell(NX-2, j, 0), Cell(NX-1, j-1, 0), and Cell(NX-1, j+1, 0)
+            d. Bottom edge
+                1. i = ]0,NX-1[, j = NY-1, k = 0
+                    a. The cell has 4 neighbors: Cell(i, NY-1, 1), Cell(i, NY-2, 0), Cell(i-1, NY-1, 0), and Cell(i+1, NY-1, 0)
+
+            =========ON BOTTOM=========
+            a. Left edge
+                1. i = 0, j = ]0,NY-1[, k = NZ-1
+                    a. The cell has 4 neighbors: Cell(0, j, NZ-2), Cell(1, j, NZ-1), Cell(0, j-1, NZ-1), and Cell(0, j+1, NZ-1)
+            b. Top edge
+                1. i = ]0,NX-1[, j = 0, k = NZ-1
+                    a. The cell has 4 neighbors: Cell(i, 0, NZ-2), Cell(i, 1, NZ-1), Cell(i-1, 0, NZ-1), and Cell(i+1, 0, NZ-1)
+            c. Right edge
+                1. i = NX-1, j = ]0,NY-1[, k = NZ-1
+                    a. The cell has 4 neighbors: Cell(NX-1, j, NZ-2), Cell(NX-2, j, NZ-1), Cell(NX-1, j-1, NZ-1), and Cell(NX-1, j+1, NZ-1)
+            d. Bottom edge
+                1. i = ]0,NX-1[, j = NY-1, k = NZ-1
+                    a. The cell has 4 neighbors: Cell(i, NY-1, NZ-2), Cell(i, NY-2, NZ-1), Cell(i-1, NY-1, NZ-1), and Cell(i+1, NY-1, NZ-1)
+
+        3. The cell is in the middle of the reservoir
+            =========ON TOP=========
+                1. i = ]0,NX-1[, j = ]0,NY-1[, and k = 0
+                    a. The cell has 5 neighbors: Cell(i, j, 1), Cell(i-1, j, 0), Cell(i+1, j, 0), Cell(i, j-1, 0), and Cell(i, j+1, 0)
+
+            =========ON BOTTOM=========
+                1. i = ]0,NX-1[, j = ]0,NY-1[, and k = NZ-1
+                    a. The cell has 5 neighbors: Cell(i, j, NZ-2), Cell(i-1, j, NZ-1), Cell(i+1, j, NZ-1), Cell(i, j-1, NZ-1), and Cell(i, j+1, NZ-1)
+
+            =========ON MIDDLE=========
+                1. i = ]0,NX-1[, j = ]0,NY-1[, and k = ]0,NZ-1[
+                    a. The cell has 6 neighbors: Cell(i, j, k+1), Cell(i, j, k-1), Cell(i-1, j, k), Cell(i+1, j, k), Cell(i, j-1, k), and Cell(i, j+1, k)
+
         """
+
+        # recover grid dimensions
+        dx, dy, dz, tops = self._dx, self._dy, self._dz, self._tops
+        nx, ny, nz = self._cart_dims[0:3]
+
+        # creates coordinate arrays
+        coord_x = np.zeros((2*nx,2*ny,2*nz))
+        coord_y = np.zeros((2*nx,2*ny,2*nz))
+        coord_z = np.zeros((2*nx,2*ny,2*nz))
+
+        for k in range(2*nz):
+            for j in range(2*ny):
+                for i in range(2*nx):
+                    ijk = misc.get_ijk(i, j, k, nx, ny, nz)
+                    # Case 1 - The cell is in one corner of the reservoir
+                    # On top - Corner 'a' - i = 0, j = 0, and k = 0
+                    if (i == 0 and j == 0 and k == 0):
+                        coord_x[i][j][k] = dx[ijk]
+                        coord_x[i+1][j][k] = dx[ijk]
+                        coord_y[i][j][k] = dy[ijk]
+                        coord_y[i][j+1][k] = dy[ijk]
+                        coord_z[i][j][k] = dz[ijk]
+                        coord_z[i][j][k+1] = dz[ijk]
+                    # On top - Corner 'b' - i = 2*(NX-1), j = 0, and k = 0
+                    if (i == 2*(nx-1) and j == 0 and k == 0):
+                        coord_x[i][j][k] = dx[ijk]
+                        coord_x[i-1][j][k] = dx[ijk]
+                        coord_y[i][j][k] = dy[ijk]
+                        coord_y[i][j+1][k] = dy[ijk]
+                        coord_z[i][j][k] = dz[ijk]
+                        coord_z[i][j][k+1] = dz[ijk]
+                    # On top - Corner 'c' - i = 0, j = 2*(NY-1), and k = 0
+                    if (i == 0 and j == 2*(ny-1) and k == 0):
+                        coord_x[i][j][k] = dx[ijk]
+                        coord_x[i+1][j][k] = dx[ijk]
+                        coord_y[i][j][k] = dy[ijk]
+                        coord_y[i][j-1][k] = dy[ijk]
+                        coord_z[i][j][k] = dz[ijk]
+                        coord_z[i][j][k+1] = dz[ijk]
+                    # On top - Corner 'd' - i = 2*(NX-1), j = 2*(NY-1), and k = 0
+                    if (i == 2*(nx-1) and j == 2*(ny-1) and k == 0):
+                        coord_x[i][j][k] = dx[ijk]
+                        coord_x[i-1][j][k] = dx[ijk]
+                        coord_y[i][j][k] = dy[ijk]
+                        coord_y[i][j-1][k] = dy[ijk]
+                        coord_z[i][j][k] = dz[ijk]
+                        coord_z[i][j][k+1] = dz[ijk]
+                    # On bottom - Corner 'a' - i = 0, j = 0, and k = 2*(NZ-1)
+                    if (i == 0 and j == 0 and k == 2*(nz-1)):
+                        coord_x[i][j][k] = dx[ijk]
+                        coord_x[i+1][j][k] = dx[ijk]
+                        coord_y[i][j][k] = dy[ijk]
+                        coord_y[i][j+1][k] = dy[ijk]
+                        coord_z[i][j][k] = dz[ijk]
+                        coord_z[i][j][k-1] = dz[ijk]
+                    # On bottom - Corner 'b' - i = 2*(NX-1), j = 0, and k = 2*(NZ-1)
+                    if (i == 2*(nx-1) and j == 0 and k == 2*(nz-1)):
+                        coord_x[i][j][k] = dx[ijk]
+                        coord_x[i-1][j][k] = dx[ijk]
+                        coord_y[i][j][k] = dy[ijk]
+                        coord_y[i][j+1][k] = dy[ijk]
+                        coord_z[i][j][k] = dz[ijk]
+                        coord_z[i][j][k-1] = dz[ijk]
+                    # On bottom - Corner 'c' - i = 0, j = 2*(NY-1), and k = 2*(NZ-1)
+                    if (i == 0 and j == 2*(ny-1) and k == 2*(nz-1)):
+                        coord_x[i][j][k] = dx[ijk]
+                        coord_x[i+1][j][k] = dx[ijk]
+                        coord_y[i][j][k] = dy[ijk]
+                        coord_y[i][j-1][k] = dy[ijk]
+                        coord_z[i][j][k] = dz[ijk]
+                        coord_z[i][j][k-1] = dz[ijk]
+                    # On bottom - Corner 'd' - i = 2*(NX-1), j = 2*(NY-1), and k = 2*(NZ-1)
+                    if (i == 2*(nx-1) and 2*(ny-1) and 2*(nz-1)):
+                        coord_x[i][j][k] = dx[ijk]
+                        coord_x[i-1][j][k] = dx[ijk]
+                        coord_y[i][j][k] = dy[ijk]
+                        coord_y[i][j-1][k] = dy[ijk]
+                        coord_z[i][j][k] = dz[ijk]
+                        coord_z[i][j][k-1] = dz[ijk]
 
         if self._verbose:
             print("\n[PROCESS] Converting GRDECL cartesian grid to corner-point grid")
 
         # Create a cartesian grid
-        self._cart_grid()
+        self._create_cart_grid()
 
         # Process the grid that have been converted
         # into a corner-point grid
         self._process_grdecl_corner_point()
 
-    def _cart_grid(self):
+    def _create_cart_grid(self):
         r"""
-        Construct Cartesian grid
+        Construct a cartesian grid
 
         Notes
         -----
