@@ -697,6 +697,9 @@ class Grid:
 
         """
 
+        if self._verbose:
+            print("\n[PROCESS] Converting GRDECL cartesian grid to corner-point grid")
+
         # recover grid dimensions
         dx, dy, dz, tops = self._dx, self._dy, self._dz, self._tops
         nx, ny, nz = self._cart_dims[0:3]
@@ -709,82 +712,74 @@ class Grid:
         for k in range(2*nz):
             for j in range(2*ny):
                 for i in range(2*nx):
-                    ijk = misc.get_ijk(i, j, k, nx, ny, nz)
-                    # Case 1 - The cell is in one corner of the reservoir
-                    # On top - Corner 'a' - i = 0, j = 0, and k = 0
-                    if (i == 0 and j == 0 and k == 0):
-                        coord_x[i][j][k] = dx[ijk]
-                        coord_x[i+1][j][k] = dx[ijk]
-                        coord_y[i][j][k] = dy[ijk]
-                        coord_y[i][j+1][k] = dy[ijk]
-                        coord_z[i][j][k] = dz[ijk]
-                        coord_z[i][j][k+1] = dz[ijk]
-                    # On top - Corner 'b' - i = 2*(NX-1), j = 0, and k = 0
-                    if (i == 2*(nx-1) and j == 0 and k == 0):
-                        coord_x[i][j][k] = dx[ijk]
+
+                    ijk = misc.get_ijk(int(i / 2), int(j / 2), int(k / 2), nx, ny, nz)
+
+                    # 0s
+                    if i == 0:
+                        coord_x[i][j][k] = 0
+                    if j == 0:
+                        coord_y[i][j][k] = 0
+                    if k == 0:
+                        coord_z[i][j][k] = tops[ijk]
+
+                    # i, j, k varying
+                    if 0 < i < 2*(nx-1):
+                        ijk = misc.get_ijk(int(i / 2)-1, int(j / 2), int(k / 2), nx, ny, nz)
                         coord_x[i-1][j][k] = dx[ijk]
-                        coord_y[i][j][k] = dy[ijk]
-                        coord_y[i][j+1][k] = dy[ijk]
-                        coord_z[i][j][k] = dz[ijk]
-                        coord_z[i][j][k+1] = dz[ijk]
-                    # On top - Corner 'c' - i = 0, j = 2*(NY-1), and k = 0
-                    if (i == 0 and j == 2*(ny-1) and k == 0):
                         coord_x[i][j][k] = dx[ijk]
-                        coord_x[i+1][j][k] = dx[ijk]
-                        coord_y[i][j][k] = dy[ijk]
+                    if 0 < j < 2*(ny-1):
+                        ijk = misc.get_ijk(int(i / 2), int(j / 2)-1, int(k / 2), nx, ny, nz)
                         coord_y[i][j-1][k] = dy[ijk]
-                        coord_z[i][j][k] = dz[ijk]
-                        coord_z[i][j][k+1] = dz[ijk]
-                    # On top - Corner 'd' - i = 2*(NX-1), j = 2*(NY-1), and k = 0
-                    if (i == 2*(nx-1) and j == 2*(ny-1) and k == 0):
-                        coord_x[i][j][k] = dx[ijk]
-                        coord_x[i-1][j][k] = dx[ijk]
                         coord_y[i][j][k] = dy[ijk]
-                        coord_y[i][j-1][k] = dy[ijk]
-                        coord_z[i][j][k] = dz[ijk]
-                        coord_z[i][j][k+1] = dz[ijk]
-                    # On bottom - Corner 'a' - i = 0, j = 0, and k = 2*(NZ-1)
-                    if (i == 0 and j == 0 and k == 2*(nz-1)):
-                        coord_x[i][j][k] = dx[ijk]
-                        coord_x[i+1][j][k] = dx[ijk]
-                        coord_y[i][j][k] = dy[ijk]
-                        coord_y[i][j+1][k] = dy[ijk]
-                        coord_z[i][j][k] = dz[ijk]
+                    if 0 < k < 2*(nz-1):
+                        ijk = misc.get_ijk(int(i / 2), int(j / 2), int(k / 2)-1, nx, ny, nz)
                         coord_z[i][j][k-1] = dz[ijk]
-                    # On bottom - Corner 'b' - i = 2*(NX-1), j = 0, and k = 2*(NZ-1)
-                    if (i == 2*(nx-1) and j == 0 and k == 2*(nz-1)):
-                        coord_x[i][j][k] = dx[ijk]
-                        coord_x[i-1][j][k] = dx[ijk]
-                        coord_y[i][j][k] = dy[ijk]
-                        coord_y[i][j+1][k] = dy[ijk]
                         coord_z[i][j][k] = dz[ijk]
-                        coord_z[i][j][k-1] = dz[ijk]
-                    # On bottom - Corner 'c' - i = 0, j = 2*(NY-1), and k = 2*(NZ-1)
-                    if (i == 0 and j == 2*(ny-1) and k == 2*(nz-1)):
-                        coord_x[i][j][k] = dx[ijk]
-                        coord_x[i+1][j][k] = dx[ijk]
-                        coord_y[i][j][k] = dy[ijk]
-                        coord_y[i][j-1][k] = dy[ijk]
-                        coord_z[i][j][k] = dz[ijk]
-                        coord_z[i][j][k-1] = dz[ijk]
-                    # On bottom - Corner 'd' - i = 2*(NX-1), j = 2*(NY-1), and k = 2*(NZ-1)
-                    if (i == 2*(nx-1) and 2*(ny-1) and 2*(nz-1)):
-                        coord_x[i][j][k] = dx[ijk]
-                        coord_x[i-1][j][k] = dx[ijk]
-                        coord_y[i][j][k] = dy[ijk]
-                        coord_y[i][j-1][k] = dy[ijk]
-                        coord_z[i][j][k] = dz[ijk]
-                        coord_z[i][j][k-1] = dz[ijk]
+
+                    # Final values
+                    if i == 2*(nx-1):
+                        ijk = misc.get_ijk(int(i / 2), int(j / 2), int(k / 2), nx, ny, nz)
+                        coord_x[i][j][k] = dx[ijk] + coord_x[i-1][j][k]
+                    if j == 2*(ny-1):
+                        ijk = misc.get_ijk(int(i / 2), int(j / 2), int(k / 2), nx, ny, nz)
+                        coord_y[i][j][k] = dy[ijk] + coord_y[i][j-1][k]
+                    if k == 2*(nz-1):
+                        ijk = misc.get_ijk(int(i / 2), int(j / 2), int(k / 2), nx, ny, nz)
+                        coord_z[i][j][k] = dz[ijk] + coord_z[i][j][k-1]
+
+        points = VTK.create_points()
+        points.SetNumberOfPoints(8*np.prod(self._cart_dims))  # 2*NX*2*NY*2*NZ
 
         if self._verbose:
-            print("\n[PROCESS] Converting GRDECL cartesian grid to corner-point grid")
+            print("\n[+] Creating VTK Points")
 
-        # Create a cartesian grid
-        self._create_cart_grid()
+        point_id = 0
+        for k in range(2*nz):
+            for j in range(2*ny):
+                for i in range(2*nx):
+                    # Set the points for the cell
+                    points.SetPoint(point_id, [coord_x[i][j][k],coord_y[i][j][k],coord_z[i][j][k]])
+                    point_id += 1
 
-        # Process the grid that have been converted
-        # into a corner-point grid
-        self._process_grdecl_corner_point()
+        self._vtk_unstructured_grid.SetPoints(points)
+
+        if self._verbose:
+            print("\n[+] Creating VTK Cells")
+
+        cell_id = 0
+        for k in range(nz):
+            for j in range(ny):
+                for i in range(nx):
+                    cell = VTK.create_hexahedron()
+
+                    # @TODO
+
+                    self._vtk_unstructured_grid.InsertNextCell(cell.GetCellType(), cell.GetPointIds())
+                    cell_id += 1
+
+        # Set the properties to the vtk array
+        self._update()
 
     def _create_cart_grid(self):
         r"""
