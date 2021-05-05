@@ -73,8 +73,10 @@ def get_include_file(filename='', line=''):
         A string that holds the name of the include file.
 
     """
-
-    return os.path.normpath(get_dirname(filename) + os.path.sep + line.split('\'')[1])
+    try:
+        return os.path.normpath(get_dirname(filename) + os.path.sep + line.split('\'')[1])
+    except:
+        return os.path.normpath(get_dirname(filename) + os.path.sep + line.split(' ')[0].strip())
 
 
 def check_dim(cart_dims, num_cell, keyword, file):

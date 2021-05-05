@@ -4,16 +4,16 @@
 
 -- Permeability distribution visualized in figure 5 in Killough's paper
 -- Killough says 'The input data included in the distribution to
--- the participants included a geostatistically generated 
+-- the participants included a geostatistically generated
 -- permeability field'
 
 -- The values below are taken from Killough's dataset, they are
 -- not based on the figure in the paper.
 
 -- Explanation to how the data in PERMX is organized:
--- Under each LAYER (i.e. K-value), 
+-- Under each LAYER (i.e. K-value),
 -- there are 25 ROWS (i.e J-values) under which there are
--- 24 entries (i.e. I-values) 
+-- 24 entries (i.e. I-values)
 
 PERMX
 -- LAYER  1
