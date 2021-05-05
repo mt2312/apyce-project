@@ -278,7 +278,7 @@ class Grid:
                             self._keywords.append(kw.group())
                         self._tops = self._read_section_grdecl(f)
                         # Check if self._tops have the correct number of values
-                        if len(self._tops) != self._num_cell:
+                        if len(self._tops) != self._cart_dims[0]*self._cart_dims[1]:
                             raise ValueError(Errors.Errors.TOPS_ERROR.value)
                         self._tops = np.array(self._tops, dtype=float)
                     elif kw.group() == 'DX':
@@ -564,6 +564,8 @@ class Grid:
         self._vtk_unstructured_grid.SetPoints(points)
 
         if self._verbose:
+            print("\n\t[+] Created {} VTK Points".format(self._vtk_unstructured_grid.GetNumberOfPoints()))
+
             print("\t[+] Detected {} collapsed pillars.".format(self._n_collapsed))
 
             if "ACTNUM" in self._keywords:
@@ -595,6 +597,9 @@ class Grid:
                     self._vtk_unstructured_grid.InsertNextCell(cell.GetCellType(), cell.GetPointIds())
 
                     cell_id += 1
+
+        if self._verbose:
+            print("\n\t[+] Created {} VTK Cells".format(self._vtk_unstructured_grid.GetNumberOfCells()))
 
         # Set the properties to the vtk array
         self._update()
@@ -695,6 +700,64 @@ class Grid:
                 1. i = ]0,NX-1[, j = ]0,NY-1[, and k = ]0,NZ-1[
                     a. The cell has 6 neighbors: Cell(i, j, k+1), Cell(i, j, k-1), Cell(i-1, j, k), Cell(i+1, j, k), Cell(i, j-1, k), and Cell(i, j+1, k)
 
+            For a 9 x 3 x 1 grid
+
+            I Pairs
+
+            +-----------> I
+            |   0---(1,2)---(3,4)---(5,6)---(7,8)---(9,10)---(11,12)---(13,14)---(15,16)---17
+            |   |
+            |   |
+            v   |
+            J   0---(1,2)---(3,4)---(5,6)---(7,8)---(9,10)---(11,12)---(13,14)---(15,16)---17
+                |
+                |
+                |
+                ()----
+
+                Cell 0 and Cell 1 in terms of i
+                0---1---3
+                |   |   |
+                |   |   |
+                0---1---3
+
+                spliting
+
+                0---1 2---3
+                |   | |   |
+                |   | |   |
+                0---1 2---3
+
+            J Pairs
+
+            +-----------> I
+            |   0---0---0---0---0---0---0---0---0---0
+            |   |
+            |   |
+            v   |
+            J   (1,2)---(1,2)---(1,2)---(1,2)---(1,2)---(1,2)---(1,2)---(1,2)---(1,2)---(1,2)
+                |
+                |
+                |
+                (3,4)---(3,4)---(3,4)---(3,4)---(3,4)---(3,4)---(3,4)---(3,4)---(3,4)---(3,4)
+                |
+                |
+                |
+                5---5---5---5---5---5---5---5---5---5
+
+
+                  +-----------> I
+                 /|
+                / |     0 --------- a --------- b     a = (1,2)
+               /  |    /|          /|          /|     b = (3,4)
+            J v   |   / |         / |         / |     ...
+                  |  x --------- x --------- x  |     some points are shared between cells
+                K v  |  |        |  |        |  |
+                     |  x -------|- x -------|- x
+                     | /         | /         | /
+                     |/          |/          |/
+                     x --------- x --------- x
+
         """
 
         if self._verbose:
@@ -705,48 +768,90 @@ class Grid:
         nx, ny, nz = self._cart_dims[0:3]
 
         # creates coordinate arrays
-        coord_x = np.zeros((2*nx,2*ny,2*nz))
-        coord_y = np.zeros((2*nx,2*ny,2*nz))
-        coord_z = np.zeros((2*nx,2*ny,2*nz))
+        coord_x = np.zeros((2*nx, 2*ny, 2*nz))
+        coord_y = np.zeros((2*nx, 2*ny, 2*nz))
+        coord_z = np.zeros((2*nx, 2*ny, 2*nz))
 
         for k in range(2*nz):
             for j in range(2*ny):
                 for i in range(2*nx):
 
-                    ijk = misc.get_ijk(int(i / 2), int(j / 2), int(k / 2), nx, ny, nz)
+                    I, J, K = int(i/2), int(j/2), int(k/2)
+
+                    ijk = misc.get_ijk(I, J, K, nx, ny, nz)
 
                     # 0s
                     if i == 0:
-                        coord_x[i][j][k] = 0
+                        coord_x[i][i][k] = 0
+                        # print("x: 0")
                     if j == 0:
                         coord_y[i][j][k] = 0
+                        # print("y: 0")
                     if k == 0:
                         coord_z[i][j][k] = tops[ijk]
+                        # print("tops: {}".format(coord_z[i][j][0]))
 
                     # i, j, k varying
-                    if 0 < i < 2*(nx-1):
-                        ijk = misc.get_ijk(int(i / 2)-1, int(j / 2), int(k / 2), nx, ny, nz)
-                        coord_x[i-1][j][k] = dx[ijk]
+                    if 0 < i < 2*nx-1:
+                        ijk = misc.get_ijk(I, J, K, nx, ny, nz)
                         coord_x[i][j][k] = dx[ijk]
-                    if 0 < j < 2*(ny-1):
-                        ijk = misc.get_ijk(int(i / 2), int(j / 2)-1, int(k / 2), nx, ny, nz)
-                        coord_y[i][j-1][k] = dy[ijk]
+                        if i > 2:
+                            r"""
+                            i
+                            ------>
+                            
+                            0---(1,2)---(3,4)---(5,6)---(7,8)---9
+                            
+                            """
+                            # we need to add the value of the last coord to get the spacing between cells
+                            coord_x[i][j][k] = dx[ijk] + coord_x[i-1][j][k]
+                        if i > 2 and i%2 == 0:
+                            # cells that are even have the same coordinate then previous odd cells
+                            coord_x[i][j][k] = coord_x[i-1][j][k]
+                        # print("coord_x[{}][{}][{}]: {}".format(i,j,k,coord_x[i][j][k]))
+                    if 0 < j < 2*ny-1:
+                        ijk = misc.get_ijk(I, J, K, nx, ny, nz)
                         coord_y[i][j][k] = dy[ijk]
-                    if 0 < k < 2*(nz-1):
-                        ijk = misc.get_ijk(int(i / 2), int(j / 2), int(k / 2)-1, nx, ny, nz)
-                        coord_z[i][j][k-1] = dz[ijk]
+                        if j > 2:
+                            coord_y[i][j][k] = dy[ijk] + coord_y[i][j-1][k]
+                        if j > 2 and j%2 == 0:
+                            # cells that are even have the same coordinate then previous odd cells
+                            coord_y[i][j][k] = coord_y[i][j-1][k]
+                        # print("coord_y[{}][{}][{}]: {}".format(i,j,k,coord_y[i][j][k]))
+                    if 0 < k < 2*nz-1:
+                        ijk = misc.get_ijk(I, J, K, nx, ny, nz)
                         coord_z[i][j][k] = dz[ijk]
+                        if k > 2:
+                            coord_z[i][j][k] = dz[ijk] + coord_z[i][j][k-1]
+                        if k > 2 and k%2 == 0:
+                            # cells that are even have the same coordinate then previous odd cells
+                            coord_z[i][j][k] = coord_z[i][j][k-1]
+                        # print("coord_z[{}][{}][{}]: {}".format(i,j,k,coord_z[i][j][k]))
 
-                    # Final values
-                    if i == 2*(nx-1):
-                        ijk = misc.get_ijk(int(i / 2), int(j / 2), int(k / 2), nx, ny, nz)
+                    # final points
+                    if i == 2*nx-1:
+                        ijk = misc.get_ijk(I, J, K, nx, ny, nz)
+                        # we need to add the value of the last coord to get the spacing between cells
                         coord_x[i][j][k] = dx[ijk] + coord_x[i-1][j][k]
-                    if j == 2*(ny-1):
-                        ijk = misc.get_ijk(int(i / 2), int(j / 2), int(k / 2), nx, ny, nz)
+                        # print("coord_x[{}][{}][{}]: {}".format(i, j, k, coord_x[i][j][k]))
+                    if j == 2*ny-1:
+                        ijk = misc.get_ijk(I, J, K, nx, ny, nz)
+                        # we need to add the value of the last coord to get the spacing between cells
                         coord_y[i][j][k] = dy[ijk] + coord_y[i][j-1][k]
-                    if k == 2*(nz-1):
-                        ijk = misc.get_ijk(int(i / 2), int(j / 2), int(k / 2), nx, ny, nz)
+                        # print("coord_y[{}][{}][{}]: {}".format(i, j, k, coord_y[i][j][k]))
+                    if k == 2*nz-1:
+                        ijk = misc.get_ijk(I, J, K, nx, ny, nz)
+                        # we need to add the value of the last coord to get the spacing between cells
                         coord_z[i][j][k] = dz[ijk] + coord_z[i][j][k-1]
+                        # print("coord_z[{}][{}][{}]: {}".format(i, j, k, coord_z[i][j][k]))
+
+        # for k in range(2*nz):
+        #     for j in range(2*ny):
+        #         for i in range(2*nx):
+        #             print("coord_x[{}][{}][{}] = {}".format(i,j,k,coord_x[i][j][k]))
+        #             print("coord_y[{}][{}][{}] = {}".format(i, j, k, coord_y[i][j][k]))
+        #             print("coord_z[{}][{}][{}] = {}\n".format(i, j, k, coord_z[i][j][k]))
+
 
         points = VTK.create_points()
         points.SetNumberOfPoints(8*np.prod(self._cart_dims))  # 2*NX*2*NY*2*NZ
@@ -765,6 +870,8 @@ class Grid:
         self._vtk_unstructured_grid.SetPoints(points)
 
         if self._verbose:
+            print("\n\t[+] Created {} VTK Points".format(self._vtk_unstructured_grid.GetNumberOfPoints()))
+
             print("\n[+] Creating VTK Cells")
 
         cell_id = 0
@@ -773,10 +880,23 @@ class Grid:
                 for i in range(nx):
                     cell = VTK.create_hexahedron()
 
-                    # @TODO
+                    # k = 0
+                    cell.GetPointIds().SetId(0, misc.get_ijk(2*i, 2*j, 2*k, 2*nx, 2*ny, 2*nz))
+                    cell.GetPointIds().SetId(1, misc.get_ijk(2*i+1, 2*j, 2*k, 2*nx, 2*ny, 2*nz))
+                    cell.GetPointIds().SetId(3, misc.get_ijk(2*i, 2*j+1, 2*k, 2*nx, 2*ny, 2*nz)) # swap 2 and 3 (eclipse -> vtk)
+                    cell.GetPointIds().SetId(2, misc.get_ijk(2*i+1, 2*j+1, 2*k, 2*nx, 2*ny, 2*nz))
+
+                    # k = 1
+                    cell.GetPointIds().SetId(4, misc.get_ijk(2*i, 2*j, 2*k+1, 2*nx, 2*ny, 2*nz))
+                    cell.GetPointIds().SetId(5, misc.get_ijk(2*i+1, 2*j, 2*k+1, 2*nx, 2*ny, 2*nz))
+                    cell.GetPointIds().SetId(7, misc.get_ijk(2*i, 2*j+1, 2*k+1, 2*nx, 2*ny, 2*nz)) # swap 6 and 7 (eclipse -> vtk)
+                    cell.GetPointIds().SetId(6, misc.get_ijk(2*i+1, 2*j+1, 2*k+1, 2*nx, 2*ny, 2*nz))
 
                     self._vtk_unstructured_grid.InsertNextCell(cell.GetCellType(), cell.GetPointIds())
                     cell_id += 1
+
+        if self._verbose:
+            print("\n\t[+] Created {} VTK Cells".format(self._vtk_unstructured_grid.GetNumberOfCells()))
 
         # Set the properties to the vtk array
         self._update()

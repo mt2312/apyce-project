@@ -5,17 +5,17 @@
 
 -- Copyright (C) 2015 Statoil
 
--- This simulation is based on the data given in 
+-- This simulation is based on the data given in
 -- 'Ninth SPE Comparative Solution Project:
 -- A Reexamination of Black-Oil Simulation',
 -- by J.E. Killough,
 -- Journal of Petroleum Technology, 1995
 
--- A dataset from one of the participants was supplied to the 
+-- A dataset from one of the participants was supplied to the
 -- participants of SPE 9. Some of the information in this
--- dataset has been used here as well. 
+-- dataset has been used here as well.
 
--- The origin of information or data used in this simulation is 
+-- The origin of information or data used in this simulation is
 -- specified in comments. This does not include data whose origin
 -- should be obvious to the reader.
 
@@ -41,7 +41,7 @@ OIL
 WATER
 GAS
 DISGAS
--- From figure 7 in Killough's paper it is evident 
+-- From figure 7 in Killough's paper it is evident
 -- that GOR is increasing with time, meaning
 -- that there must be dissolved gas present
 
@@ -58,7 +58,7 @@ WELLDIMS
 -- Item 3: maximum number of groups in the model
 -- 	   - only one group in model
 -- Item 4: maximum number of wells in any one group
--- 	   - this can definitetly not be more than 26 
+-- 	   - this can definitetly not be more than 26
 	26 5 1 26 /
 TABDIMS
 -- The number of rows in SWOF exceeds the default maximum,
@@ -75,15 +75,15 @@ EQLDIMS
 UNIFOUT
 
 GRID
--- Killough says 'the grid was in conventional rectangular 
+-- Killough says 'the grid was in conventional rectangular
 -- coordinates without corner point geometry or local grid refinements'
 
 NOECHO
-DX 
--- There are in total 9000 cells with length 300ft in x-direction	
+DX
+-- There are in total 9000 cells with length 300ft in x-direction
    	9000*300 /
 DY
--- There are in total 9000 cells with length 300ft in y-direction	
+-- There are in total 9000 cells with length 300ft in y-direction
 	9000*300 /
 DZ
 -- The thicknesses of the layers are given in table 1 in Killough's paper
@@ -106,7 +106,7 @@ DZ
 
 -- TOPS
 INCLUDE
-	'TOPSVALUES.DATA' /
+	SPE9/TOPSVALUES.DATA /
 
 PORO
 -- Porosity in each level is contant
@@ -129,7 +129,7 @@ PORO
 
 -- PERMX, PERMY & PERMZ
 INCLUDE
-	'PERMVALUES.DATA' /
+	SPE9/PERMVALUES.DATA /
 
 ECHO
 
@@ -146,9 +146,9 @@ PVTW
 -- Item 3 and 4 are taken from SPE2
   	3600 1.0034 3e-6 0.96 0 /
 --NOTE:
---   a)	It is not explicitly stated in Killough that it is okay to use SPE2-values here. 
+--   a)	It is not explicitly stated in Killough that it is okay to use SPE2-values here.
 --   b)	I am not 100% sure if the given compressibility value is at ref. pres. 3600psia.
---   c)	Item 3 and 4 can probably be explained on the basis of Killough's dataset. In 
+--   c)	Item 3 and 4 can probably be explained on the basis of Killough's dataset. In
 -- 	order to do that I need info about keywords in VIP
 
 ROCK
@@ -162,20 +162,20 @@ ROCK
 --   a) I am not 100% sure if the given compressibility value is at 3600psia.
 --   b) 'Comp. Methods for Multiphase Flow in Porous Media' states
 --      that rock compr. is 1e-6 inverse psi. This is probably correct, as
---   	I think this is based on Killough's dataset - to be sure, I need 
+--   	I think this is based on Killough's dataset - to be sure, I need
 -- 	more info about keywords in VIP.
 
 DENSITY
--- Density (lb per ft³) at surface cond. of 
+-- Density (lb per ft³) at surface cond. of
 -- oil, water and gas, respectively (in that order)
 
 -- The values for oil and water are given by Killough to
--- be 0.7206 and 1.0095 gm per cc, or equivalently 
+-- be 0.7206 and 1.0095 gm per cc, or equivalently
 -- 44.9856 and 63.0210 lb per ft³
 
--- A gas density of 0.07039 lb per ft³ was calculated using formula at 
+-- A gas density of 0.07039 lb per ft³ was calculated using formula at
 -- petrowiki.org/Calculating_gas_properties:
--- (28.967*Specific gravity*pressure)/(Z-factor*gas constant*temperature) 
+-- (28.967*Specific gravity*pressure)/(Z-factor*gas constant*temperature)
 -- with the values given in Killough's table 2 at 14.7 psia (1 atm).
 -- A temperature of 15C=59F was also used in the above formula.
 	44.9856 63.0210 0.07039 /
@@ -197,14 +197,14 @@ PVTO
 1.130	 2800	 1.0870	 1.00 /
 1.270	 3200	 1.0985	 0.98 /
 1.390	 3600	 1.1100	 0.95 /
-1.500	 4000	 1.1200	 0.94 
+1.500	 4000	 1.1200	 0.94
 	 5000	 1.1189	 0.94 /
 /
 -- Comment in regards to the last row in PVTO:
 --   Killough says that 'at 1000psi above the saturation
 --   pressure the Bo is 0.999 times that of the Bo at Psat'
 --   which means that the FVF (i.e. Bo) at 5000psia is 0.999*0.1200=1.1189
---   Killough also says that 'the oil viscosity does not 
+--   Killough also says that 'the oil viscosity does not
 --   increase with increasing pressure in undersaturated conditions'
 --   which explains why the oil viscosity is 0.94.
 
@@ -215,7 +215,7 @@ PVDG
 --	       Bg=5.03676*Z*temperature(R)/pressure(psia) rb/Mscf
 --	       where a constant temperature=100F=559.67R has been used because
 --	       that is the initial reservoir temperature according to Killough's paper
---	       The above formula is retrieved from 
+--	       The above formula is retrieved from
 --	       petrowiki.org/Gas_formation_volume_factor_and_density
 -- Column 3: gas viscosity (cP)
 
@@ -261,7 +261,7 @@ SWOF
 -- Column 1: water saturation
 -- Column 2: water relative permeability
 -- Column 3: oil relative permeability when only oil and water are present
--- Column 4: corresponding water-oil capillary pressure (psi) 
+-- Column 4: corresponding water-oil capillary pressure (psi)
 
 -- These values are taken from Killough's dataset:
 0.151090     0.0     1.0     400.0
@@ -418,11 +418,11 @@ WELSPECS
 -- 	     - stated to be 9110ft in Killough
 -- Column 6: preferred phase for well
 -- 	     - should be water for injector and oil for producers
--- Column 7: drainage radius for calc. of productivity or 
+-- Column 7: drainage radius for calc. of productivity or
 --           injectivity indices (ft)
 --	     - stated to be 60ft in Killough
 
--- #: 1	       2   3  4 5	 6	7  
+-- #: 1	       2   3  4 5	 6	7
     'INJE1'   'G' 24 25	9110    'WATER' 60   /
     'PRODU2'  'G'  5  1	9110	'OIL'   60   /
     'PRODU3'  'G'  8  2	9110	'OIL'   60   /
@@ -435,7 +435,7 @@ WELSPECS
     'PRODU10' 'G' 11  9	9110	'OIL'   60   /
     'PRODU11' 'G' 12 10	9110	'OIL'   60   /
     'PRODU12' 'G' 10 11	9110	'OIL'   60   /
-    'PRODU13' 'G'  5 12	9110	'OIL'   60   /  
+    'PRODU13' 'G'  5 12	9110	'OIL'   60   /
     'PRODU14' 'G'  8 13	9110	'OIL'   60   /
     'PRODU15' 'G' 11 14	9110	'OIL'   60   /
     'PRODU16' 'G' 13 15	9110	'OIL'   60   /
@@ -460,7 +460,7 @@ COMPDAT
 -- Column 9: well bore diameter
 -- 	     - Killough says radius is 0.5ft
 
--- #: 1		     2  3	 4    5	  6	7	8	9 
+-- #: 1		     2  3	 4    5	  6	7	8	9
      'INJE1'        24 25	11   15	'OPEN'	1*	1*	1 /
      'PRODU2'        5  1	 2    4	'OPEN'	1*	1*	1 /
      'PRODU3'        8  2	 2    4	'OPEN'	1*	1*	1 /
@@ -491,14 +491,14 @@ COMPDAT
 
 WCONINJE
 -- Killough says the water injector is set to a max rate of
--- 5000 STBW per D with a max BHP of 4000psia at a reference 
+-- 5000 STBW per D with a max BHP of 4000psia at a reference
 -- depth of 9110ft subsea:
 --   #:  1	    2       3      4     5       7
 	'INJE1' 'WATER' 'OPEN' 'RATE' 5000 1* 4000 /
 /
 
 WCONPROD
--- Killough says the max oil rate for all producers is set to 
+-- Killough says the max oil rate for all producers is set to
 -- 1500 STBO per D at time zero and that the min flowing BHP
 -- is set to 1000psia (with a ref. depth of 9110ft
 -- for this pressure in all wells):

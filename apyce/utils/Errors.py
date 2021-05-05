@@ -13,7 +13,7 @@ class Errors(Enum):
     GRID_NOT_DEFINED_ERROR = "The grid is not defined!"
     CHECK_DIM_ERRROR = "GRDECL keyword {} found before dimension specification"
     LOAD_CELL_DATA_ERROR = "{} data size must be NX*NY*NZ"
-    TOPS_ERROR = "TOPS data size must be NX*NY*NZ"
+    TOPS_ERROR = "TOPS data size must be NX*NY"
     DX_ERROR = "DX data size must be NX*NY*NZ"
     DY_ERROR = "DY data size must be NX*NY*NZ"
     DZ_ERROR = "DZ data size must be NX*NY*NZ"
