@@ -50,6 +50,14 @@ class Grid:
         A string that holds the origin of grid file (eclipse / builder).
     G._verbose = boolean
         A boolean that will be used to emit (or not) messages to screen while processing.
+    G._dx : ndarray
+        A list of floating point numbers that represents the DX keyword from Schlumberger Eclipse.
+    G._dy : ndarray
+        A list of floating point numbers that represents the DY keyword from Schlumberger Eclipse.
+    G._dz : ndarray
+        A list of floating point numbers that represents the DZ keyword from Schlumberger Eclipse.
+    G._tops : ndarray
+        A list of floating point numbers that represents the TOPS keyword from Schlumberger Eclipse.
 
     Parameters
     ----------
@@ -623,83 +631,6 @@ class Grid:
                    6 --------- 7
 
 
-
-                        Top edge
-                    a-----------------b
-                    |                 |
-         Left edge  |    reservoir    | right edge
-                    |    (top view)   |
-                    c-----------------d
-                        bottom edge
-
-
-        1. The cell is in one corner of the reservoir
-            =========ON TOP=========
-            1.1. Left Corners
-                a. i = 0, j = 0, and k = 0
-                    1. The cell has 3 neighbors: Cell(0, 0, 1), Cell(1, 0, 0), and Cell(0, 1, 0)
-                c. i = 0, j = NY-1, and k = 0
-                    1. The cell has 3 neighbors: Cell(0, NY-1, 1), Cell(1, NY-1, 0), and Cell(0, NY-2, 0)
-            1.2. Right Corners
-                b. i = NX-1, j = 0, and k = 0
-                    1. The cell has 3 neighbors: Cell(NX-1, 0, 1), Cell(NX-2, 0, 0), and Cell(NX-1, 1, 0)
-                d. i = NX-1, j = NY-1, and k = 0
-                    1. The cell has 3 neighbors: Cell(NX-1, DY-1, 1), Cell(NX-2, 0, 0), and Cell(NX-1, NY-2, 0)
-
-            =========ON BOTTOM=========
-            1.3. Left Corners
-                a. i = 0, j = 0, and k = NZ-1
-                    1. The cell has 3 neighbors: Cell(0, 0, NZ-2), Cell(1, 0, NZ-1), and Cell(0, 1, NZ-1)
-                c. i = 0, j = NY-1, and k = NZ-1
-                    1. The cell has 3 neighbors: Cell(0, NY-1, NZ-2), Cell(1, NY-1, NZ-1), and Cell(0, NY-2, NZ-1)
-            1.4. Right Corners
-                b. i = NX-1, j = 0, and k = NZ-1
-                    1. The cell has 3 neighbors: Cell(NX-1, 0, NZ-2), Cell(NX-2, 0, NZ-1), and Cell(0, 1, NZ-1)
-                d. i = NX-1, j = NY-1, and k = NZ-1
-                    1. The cell has 3 neighbors: Cell(NX-1, NY-1, NZ-2), Cell(NX-2, NY-1, NZ-1), and Cell(NX-1, NY-2, NZ-1)
-
-        2. The cell is at the edge of the reservoir (with the exception of the corners)
-            =========ON TOP=========
-            a. Left edge
-                1. i = 0, j = ]0,NY-1[, k = 0
-                    a. The cell has 4 neighbors: Cell(0, j, 1), Cell(1, j, 0), Cell(0, j-1, 0), and Cell(0, j+1, 0)
-            b. Top edge
-                1. i = ]0,NX-1[, j = 0, k = 0
-                    a. The cell has 4 neighbors: Cell(i, 0, 1), Cell(i, 1, 0), Cell(i-1, 0, 0), and Cell(i+1, 0, 0)
-            c. Right edge
-                1. i = NX-1, j = ]0,NY-1[, k = 0
-                    a. The cell has 4 neighbors: Cell(NX-1, j, 1), Cell(NX-2, j, 0), Cell(NX-1, j-1, 0), and Cell(NX-1, j+1, 0)
-            d. Bottom edge
-                1. i = ]0,NX-1[, j = NY-1, k = 0
-                    a. The cell has 4 neighbors: Cell(i, NY-1, 1), Cell(i, NY-2, 0), Cell(i-1, NY-1, 0), and Cell(i+1, NY-1, 0)
-
-            =========ON BOTTOM=========
-            a. Left edge
-                1. i = 0, j = ]0,NY-1[, k = NZ-1
-                    a. The cell has 4 neighbors: Cell(0, j, NZ-2), Cell(1, j, NZ-1), Cell(0, j-1, NZ-1), and Cell(0, j+1, NZ-1)
-            b. Top edge
-                1. i = ]0,NX-1[, j = 0, k = NZ-1
-                    a. The cell has 4 neighbors: Cell(i, 0, NZ-2), Cell(i, 1, NZ-1), Cell(i-1, 0, NZ-1), and Cell(i+1, 0, NZ-1)
-            c. Right edge
-                1. i = NX-1, j = ]0,NY-1[, k = NZ-1
-                    a. The cell has 4 neighbors: Cell(NX-1, j, NZ-2), Cell(NX-2, j, NZ-1), Cell(NX-1, j-1, NZ-1), and Cell(NX-1, j+1, NZ-1)
-            d. Bottom edge
-                1. i = ]0,NX-1[, j = NY-1, k = NZ-1
-                    a. The cell has 4 neighbors: Cell(i, NY-1, NZ-2), Cell(i, NY-2, NZ-1), Cell(i-1, NY-1, NZ-1), and Cell(i+1, NY-1, NZ-1)
-
-        3. The cell is in the middle of the reservoir
-            =========ON TOP=========
-                1. i = ]0,NX-1[, j = ]0,NY-1[, and k = 0
-                    a. The cell has 5 neighbors: Cell(i, j, 1), Cell(i-1, j, 0), Cell(i+1, j, 0), Cell(i, j-1, 0), and Cell(i, j+1, 0)
-
-            =========ON BOTTOM=========
-                1. i = ]0,NX-1[, j = ]0,NY-1[, and k = NZ-1
-                    a. The cell has 5 neighbors: Cell(i, j, NZ-2), Cell(i-1, j, NZ-1), Cell(i+1, j, NZ-1), Cell(i, j-1, NZ-1), and Cell(i, j+1, NZ-1)
-
-            =========ON MIDDLE=========
-                1. i = ]0,NX-1[, j = ]0,NY-1[, and k = ]0,NZ-1[
-                    a. The cell has 6 neighbors: Cell(i, j, k+1), Cell(i, j, k-1), Cell(i-1, j, k), Cell(i+1, j, k), Cell(i, j-1, k), and Cell(i, j+1, k)
-
             For a 9 x 3 x 1 grid
 
             I Pairs
@@ -783,13 +714,10 @@ class Grid:
                     # 0s
                     if i == 0:
                         coord_x[i][i][k] = 0
-                        # print("x: 0")
                     if j == 0:
                         coord_y[i][j][k] = 0
-                        # print("y: 0")
                     if k == 0:
                         coord_z[i][j][k] = tops[ijk]
-                        # print("tops: {}".format(coord_z[i][j][0]))
 
                     # i, j, k varying
                     if 0 < i < 2*nx-1:
@@ -799,16 +727,15 @@ class Grid:
                             r"""
                             i
                             ------>
-                            
+
                             0---(1,2)---(3,4)---(5,6)---(7,8)---9
-                            
+
                             """
                             # we need to add the value of the last coord to get the spacing between cells
                             coord_x[i][j][k] = dx[ijk] + coord_x[i-1][j][k]
                         if i > 2 and i%2 == 0:
                             # cells that are even have the same coordinate then previous odd cells
                             coord_x[i][j][k] = coord_x[i-1][j][k]
-                        # print("coord_x[{}][{}][{}]: {}".format(i,j,k,coord_x[i][j][k]))
                     if 0 < j < 2*ny-1:
                         ijk = misc.get_ijk(I, J, K, nx, ny, nz)
                         coord_y[i][j][k] = dy[ijk]
@@ -817,7 +744,6 @@ class Grid:
                         if j > 2 and j%2 == 0:
                             # cells that are even have the same coordinate then previous odd cells
                             coord_y[i][j][k] = coord_y[i][j-1][k]
-                        # print("coord_y[{}][{}][{}]: {}".format(i,j,k,coord_y[i][j][k]))
                     if 0 < k < 2*nz-1:
                         ijk = misc.get_ijk(I, J, K, nx, ny, nz)
                         coord_z[i][j][k] = dz[ijk]
@@ -826,31 +752,20 @@ class Grid:
                         if k > 2 and k%2 == 0:
                             # cells that are even have the same coordinate then previous odd cells
                             coord_z[i][j][k] = coord_z[i][j][k-1]
-                        # print("coord_z[{}][{}][{}]: {}".format(i,j,k,coord_z[i][j][k]))
 
                     # final points
                     if i == 2*nx-1:
                         ijk = misc.get_ijk(I, J, K, nx, ny, nz)
                         # we need to add the value of the last coord to get the spacing between cells
                         coord_x[i][j][k] = dx[ijk] + coord_x[i-1][j][k]
-                        # print("coord_x[{}][{}][{}]: {}".format(i, j, k, coord_x[i][j][k]))
                     if j == 2*ny-1:
                         ijk = misc.get_ijk(I, J, K, nx, ny, nz)
                         # we need to add the value of the last coord to get the spacing between cells
                         coord_y[i][j][k] = dy[ijk] + coord_y[i][j-1][k]
-                        # print("coord_y[{}][{}][{}]: {}".format(i, j, k, coord_y[i][j][k]))
                     if k == 2*nz-1:
                         ijk = misc.get_ijk(I, J, K, nx, ny, nz)
                         # we need to add the value of the last coord to get the spacing between cells
                         coord_z[i][j][k] = dz[ijk] + coord_z[i][j][k-1]
-                        # print("coord_z[{}][{}][{}]: {}".format(i, j, k, coord_z[i][j][k]))
-
-        # for k in range(2*nz):
-        #     for j in range(2*ny):
-        #         for i in range(2*nx):
-        #             print("coord_x[{}][{}][{}] = {}".format(i,j,k,coord_x[i][j][k]))
-        #             print("coord_y[{}][{}][{}] = {}".format(i, j, k, coord_y[i][j][k]))
-        #             print("coord_z[{}][{}][{}] = {}\n".format(i, j, k, coord_z[i][j][k]))
 
 
         points = VTK.create_points()
@@ -1021,9 +936,9 @@ class Grid:
 
             In APyCE:
             MRST performs this process only once, this is because the array [lines]
-            already contain all the necessary coordinates, here in APyCE, 
+            already contain all the necessary coordinates, here in APyCE,
             we will do the process cell by cell.
-            
+
             """
 
             # p_idx -> [0,3]
@@ -1113,7 +1028,7 @@ class Grid:
             .
             .
             xtop ytop ztop xbtm ybtm zbtm
-            
+
         """
 
         # Get the pillar from [COORD]

@@ -9,3 +9,4 @@ venv/
 apyce.egg-info
 build
 dist
+venv3/
