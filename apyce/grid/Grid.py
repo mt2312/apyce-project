@@ -146,7 +146,7 @@ class Grid:
         with open(misc.get_path(filename)) as f:
             for line in f:
                 # Keyword pattern
-                kw = re.match('^[A-Z][A-Z0-9]{0,7}(|/)', str(line))
+                kw = re.match('^[A-Z][A-Z0-9]{0,7}', str(line))
 
                 if kw is not None:
                     if kw.group() == 'SPECGRID':
@@ -692,7 +692,7 @@ class Grid:
         """
 
         if self._verbose:
-            print("\n[PROCESS] Converting GRDECL cartesian grid to corner-point grid")
+            print("\n[PROCESS] Converting GRDECL cartesian grid to VTU")
 
         # recover grid dimensions
         dx, dy, dz, tops = self._dx, self._dy, self._dz, self._tops
@@ -815,56 +815,6 @@ class Grid:
 
         # Set the properties to the vtk array
         self._update()
-
-    def _create_cart_grid(self):
-        r"""
-        Construct a cartesian grid
-
-        Notes
-        -----
-        See cartesianGrdecl.m on MRST
-
-        """
-
-        xi = np.arange(self._cart_dims[0]+1, dtype=int)
-        yi = np.arange(self._cart_dims[1]+1, dtype=int)
-        zi = np.arange(self._cart_dims[2]+1, dtype=int)
-
-        # Create depthz
-        depthz = np.zeros([len(xi), len(yi)], dtype=int)
-
-        # Recover Grid Specification
-        cart_dims = np.array([len(xi) - 1, len(yi) - 1, len(zi) - 1])
-        X, Y, Z = np.meshgrid(xi, yi, zi, indexing="ij")  # numpy equivalent to MATLAB ndgrid()
-        rep = np.reshape(depthz, cart_dims[0:2] + 1, order="F")  # order equals to MATLAB
-        Z = np.add(Z, np.reshape(rep, [len(xi), len(yi), 1], order="F"))
-        Z = np.array(Z, dtype=int, order="F")
-
-        # Make Pillars
-        n = np.prod(cart_dims[0:2] + 1)
-        lines = np.zeros([n, 6], dtype=int)
-        lines[:, [0, 3]] = np.reshape(X[:, :, [0, -1]], [n, 2], order="F")
-        lines[:, [1, 4]] = np.reshape(Y[:, :, [0, -1]], [n, 2], order="F")
-        lines[:, [2, 5]] = np.reshape(Z[:, :, [0, -1]], [n, 2], order="F")
-
-        # Calculate the coordinates
-        coord = np.reshape(lines.T, (6*(cart_dims[0]+1)*(cart_dims[1]+1), 1), order="F")
-
-        # Assign z-coordinates
-        # ind(d) == [1, 1, 2, 2, 3, ..., dims(d), dims(d), dims(d)+1]
-        ind = lambda d: 1 + np.fix(np.arange(1, 2 * cart_dims[d] + 1, dtype=int) / 2)
-
-        ind_x = np.array([i - 1 for i in ind(0)], dtype=int, order="F")
-        ind_y = np.array([i - 1 for i in ind(1)], dtype=int, order="F")
-        ind_z = np.array([i - 1 for i in ind(2)], dtype=int, order="F")
-
-        ixgrid = np.ix_(ind_x, ind_y, ind_z)
-
-        zcorn = np.reshape(Z[ixgrid], (8 * np.prod(cart_dims), 1), order="F")
-
-        # Assign data to Grid object
-        self._coord = coord
-        self._zcorn = zcorn
 
     def _get_cell_coords(self, i, j, k):
         r"""
