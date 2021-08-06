@@ -6,7 +6,7 @@ import numpy as np
 
 FILE = '../Data/dome.grdecl'
 BASENAME = 'dome.grdecl'
-ABSOLUTE_PATH = '/home/metzker/Desktop/Repositories/apyce-project/tests/Data/dome.grdecl'
+ABSOLUTE_PATH = '/home/metzker/Documents/Repositories/apyce-project/tests/Data/dome.grdecl'
 DIRNAME = '../Data'
 
 

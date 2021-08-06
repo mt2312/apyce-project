@@ -4,7 +4,7 @@ import os
 
 FILE = '../Data/dome.grdecl'
 BASENAME = 'dome.grdecl'
-ABSOLUTE_PATH = '/home/metzker/Desktop/Repositories/apyce-project/tests/Data/dome.grdecl'
+ABSOLUTE_PATH = '/home/metzker/Documents/Repositories/apyce-project/tests/Data/dome.grdecl'
 DIRNAME = '../Data'
 
 
@@ -30,12 +30,6 @@ class TestMisc():
         keywords = ''
         file = None
         assert misc.check_dim(cart_dims, num_cell, keywords, file) is None
-
-    def test_check_grid(self):
-        cart_dims = [20, 20, 4]
-        coord = [0]
-        zcorn = [0]
-        assert misc.check_grid(cart_dims, coord, zcorn) is None
 
     def test_create_results_directory(self):
         assert misc.create_results_directory(FILE) == '../Data/Results/'
