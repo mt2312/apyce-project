@@ -10,3 +10,9 @@ apyce.egg-info
 build
 dist
 venv3/
+examples/PERMVALUES.DATA
+examples/Results/
+examples/SPE9.DATA
+examples/TOPSVALUES.DATA
+examples/grid.data
+examples/gridz.data

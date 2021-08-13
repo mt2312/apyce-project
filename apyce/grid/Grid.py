@@ -733,24 +733,24 @@ class Grid:
                             """
                             # we need to add the value of the last coord to get the spacing between cells
                             coord_x[i][j][k] = dx[ijk] + coord_x[i-1][j][k]
-                        if i > 2 and i%2 == 0:
-                            # cells that are even have the same coordinate then previous odd cells
+                        if i > 1 and i%2 == 0:
+                            # cells that are even have the same coordinate than previous odd cells
                             coord_x[i][j][k] = coord_x[i-1][j][k]
                     if 0 < j < 2*ny-1:
                         ijk = misc.get_ijk(I, J, K, nx, ny, nz)
                         coord_y[i][j][k] = dy[ijk]
                         if j > 2:
                             coord_y[i][j][k] = dy[ijk] + coord_y[i][j-1][k]
-                        if j > 2 and j%2 == 0:
-                            # cells that are even have the same coordinate then previous odd cells
+                        if j > 1 and j%2 == 0:
+                            # cells that are even have the same coordinate than previous odd cells
                             coord_y[i][j][k] = coord_y[i][j-1][k]
                     if 0 < k < 2*nz-1:
                         ijk = misc.get_ijk(I, J, K, nx, ny, nz)
                         coord_z[i][j][k] = dz[ijk]
                         if k > 2:
                             coord_z[i][j][k] = dz[ijk] + coord_z[i][j][k-1]
-                        if k > 2 and k%2 == 0:
-                            # cells that are even have the same coordinate then previous odd cells
+                        if k > 1 and k%2 == 0:
+                            # cells that are even have the same coordinate than previous odd cells
                             coord_z[i][j][k] = coord_z[i][j][k-1]
 
                     # final points
