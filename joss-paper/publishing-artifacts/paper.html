@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Mateus Tosta, Bin Wang, Gustavo P.
+Oliveira" />
+  <meta name="dcterms.date" content="2023-05-01" />
+  <title>APyCE: A Python module for parsing corner-point grids and visualizing 3D reservoir models</title>
+  <style>
+    html {
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 1em;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-size: 85%;
+      margin: 0;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    div.csl-bib-body { }
+    div.csl-entry {
+      clear: both;
+    }
+    .hanging div.csl-entry {
+      margin-left:2em;
+      text-indent:-2em;
+    }
+    div.csl-left-margin {
+      min-width:2em;
+      float:left;
+    }
+    div.csl-right-inline {
+      margin-left:2em;
+      padding-left:1em;
+    }
+    div.csl-indent {
+      margin-left: 2em;
+    }
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">APyCE: A Python module for parsing corner-point grids
+and visualizing 3D reservoir models</h1>
+<p class="author">true</p>
+<p class="author">true</p>
+<p class="author">true</p>
+<p class="date">01 May 2023</p>
+</header>
+<h1 id="summary">Summary</h1>
+<p>Data visualization resources are indispensable for any software
+intended to handle 3D models of oil and gas (O&amp;G) reservoirs <span
+class="citation" data-cites="fanchi2005">(<a href="#ref-fanchi2005"
+role="doc-biblioref">Fanchi, 2005</a>)</span>. As never seen before, the
+groundbreaking power of computer graphics and scientific visualization
+have brought endless capabilities for geoscientists, engineers, and
+analysts to understand subsurface phenomena. Multidimensional views
+greatly improve seismic interpretation, reservoir characterization, and
+real-time monitoring of producing fields, since high-resolution images
+and 3D models can reconstitute the physical world almost perfectly.</p>
+<p>Many simulators with popularity among the O&amp;G community use
+discrete formulations based on corner-point grids <span class="citation"
+data-cites="ponting1989corner">(<a href="#ref-ponting1989corner"
+role="doc-biblioref">Ponting, 1989</a>)</span>. Corner-point grids can
+be considered an international standard to represent all the geologic
+features found in complex reservoirs, including dips, bends, pinches,
+and faults. While many tools for post-processing of corner-point grids
+are available, most of them are independent and have their own internal
+semantic and object hierarchy, which prevents their full integration.
+Furthermore, because the interoperability of grid files (in terms of
+importing/exporting data) among such programs depends on complex
+programming routines, the representation of modeling entities and
+features from a given software may be mismatched when read into another.
+Data integration and data visualization are permanent challenges for
+software and algorithm developers working on solutions for the O&amp;G
+sector. In particular, researchers often need visualization tools to
+communicate their discoveries, make reports with interactive plots, and
+easily generate publication-ready graphics of post-processed data.</p>
+<p>A considerable number of commercial and open-source software capable
+to deal with corner-point grids for visualization purposes are known.
+Either they have embedded viewers as secondary functionality or are
+primarily tailored for visualization. In the first group, we can cite
+CMG Results©, Schlumberger Petrel©, ESSS Kraken©, and Amarile
+RE-Studio©; in the second group, SINTEF’s MRST <span class="citation"
+data-cites="knut2019">(<a href="#ref-knut2019" role="doc-biblioref">Lie,
+2019</a>)</span> and Ceetron Solution’s ResInsight are a few options.
+Minor open-source software projects have been proposed by scholars and
+independent scientists with an interest in O&amp;G data, but they are
+usually focused on flow simulations instead of visualization and
+corner-point grid manipulation.</p>
+<p>This paper introduces a lightweight Python-based package for the
+plotting of reservoir models discretized through Cartesian or
+corner-point grids called <em>APyCE</em>. The objective of this software
+is to provide a simple pipeline for post-processing through the PyVista
+module <span class="citation" data-cites="pyvista">(<a
+href="#ref-pyvista" role="doc-biblioref">Sullivan &amp; Kaszynski,
+2019</a>)</span> and VTK <span class="citation" data-cites="vtk2010">(<a
+href="#ref-vtk2010" role="doc-biblioref">Kitware, 2010</a>)</span>
+exporting for 3D visualization inside Kitware Paraview <span
+class="citation" data-cites="paraview2015">(<a href="#ref-paraview2015"
+role="doc-biblioref">Ayachit &amp; Avila, 2015</a>)</span>.</p>
+<h1 id="statement-of-need">Statement of need</h1>
+<p><em>APyCE</em> (pronounced as “ah-pees”) is an enhanced and extended
+version of the early project PyGRDECL <span class="citation"
+data-cites="pygrdecl">(<a href="#ref-pygrdecl"
+role="doc-biblioref">Wang, 2018</a>)</span>, developed to handle
+Schlumberger Eclipse© <span class="citation" data-cites="Eclipse">(<a
+href="#ref-Eclipse" role="doc-biblioref">Schlumberger, 2014</a>)</span>
+deck files for visualization. APyCE is multi-platform, object-oriented,
+and easy to use, being prepared to fulfill its objectives with only 4
+lines of Python code to be run by whoever with a minimum background in
+programming. It is recommended for researchers who need to render
+high-quality figures for inclusion into scientific papers, reports,
+presentations, handouts, interactive notebooks, and general documents
+for teaching purposes, or auxiliary tools for data analysis within
+reservoir modeling or related domains.</p>
+<p>APyCE was developed to allow quick analysis and visualization of 3D
+oil and gas reservoirs, so that the tool can be used by people in
+academia or industry. It is an open-source tool maintained on GitHub
+platform, fully accessible to any developer interested to contribute via
+pull requests. Given its object-oriented structure, the code can be
+extended and improved for further applications.</p>
+<h1 id="design-and-implementation">Design and implementation</h1>
+<p>APyCE is developed on top of Eclipse deck files’ structure <span
+class="citation" data-cites="pettersen2006">(<a
+href="#ref-pettersen2006" role="doc-biblioref">Pettersen,
+2006</a>)</span>. However, one should stress that similar topologies are
+found in most of the input files managed by competing software. Such
+files are internally divided into sections. Each section admits a broad
+set of keywords that reflect the model’s complexity. The higher is the
+number of keywords to be processed, the greater is the level of details
+on stratigraphy, fluid properties, well control, numerical settings, and
+so on.</p>
+<p>In particular, Eclipse’s more general files that contain grid
+specifications have a <code>.GRDECL</code> extension. Initially, we
+implemented a parser routine that recognizes only the essential keywords
+to build either a corner-point (<a href="#fig:cpg"
+data-reference-type="autoref" data-reference="fig:cpg">[fig:cpg]</a>) or
+block-centered grid (<a href="#fig:blocks" data-reference-type="autoref"
+data-reference="fig:blocks">[fig:blocks]</a>). All keywords of the file
+are identified by a regular expression like
+<code>^[A-Z][A-Z0-9]{0,7}</code> (<a href="#fig:grdecl"
+data-reference-type="autoref"
+data-reference="fig:grdecl">[fig:grdecl]</a>).</p>
+<figure>
+<img src="media/cpg.png"
+alt="Corner-point grid. This geometry enables us to describe reservoirs with geological realism. Sometimes referred to as “pillar grid” because of ensembles of pillars that span from the top to the bottom of the model, their grid cells are defined by eight paired nodes encountered over four adjacent pillars. Since the nodes are free to slide along the pillars, several features, such as pinch-outs and folds, are accurately and consistently represented, even with degenerated or nonconform cells." />
+<figcaption aria-hidden="true">Corner-point grid. This geometry enables
+us to describe reservoirs with geological realism. Sometimes referred to
+as “pillar grid” because of ensembles of pillars that span from the top
+to the bottom of the model, their grid cells are defined by eight paired
+nodes encountered over four adjacent pillars. Since the nodes are free
+to slide along the pillars, several features, such as pinch-outs and
+folds, are accurately and consistently represented, even with
+degenerated or nonconform cells.<span id="fig:cpg"
+label="fig:cpg"></span></figcaption>
+</figure>
+<figure>
+<img src="media/blocks.png"
+alt="Block-centered grid. Grids like this are Cartesian-like domains specified by multidirectional step sizes and top reference coordinates. The cells are similar to “sugar”’’” cuboids that arrange to approximate a regular three-dimensional (“shoebox”) volume." />
+<figcaption aria-hidden="true">Block-centered grid. Grids like this are
+Cartesian-like domains specified by multidirectional step sizes and top
+reference coordinates. The cells are similar to “sugar”’’” cuboids that
+arrange to approximate a regular three-dimensional (“shoebox”)
+volume.<span id="fig:blocks" label="fig:blocks"></span></figcaption>
+</figure>
+<figure>
+<img src="media/excerpt.png"
+alt="Excerpt of a .GRDECL file for a reservoir model highlighting the SPECGRID and COORD keywords. The ellipsis is not part of the syntax and here they only illustrate continuity of the file content. " />
+<figcaption aria-hidden="true">Excerpt of a <code>.GRDECL</code> file
+for a reservoir model highlighting the <em>SPECGRID</em> and
+<em>COORD</em> keywords. The ellipsis is not part of the syntax and here
+they only illustrate continuity of the file content. <span
+id="fig:grdecl" label="fig:grdecl"></span></figcaption>
+</figure>
+<p>APyCE is developed under a object-oriented paradigm. It has a main
+class called <code>Grid</code> where the main methods are contained. A
+second class called <code>VTK</code> comprises all the methods related
+to exporting operations of VTK files. The third class,
+<code>Errors</code>, handles error messages. However, the essential
+functions to load and visualize a reservoir grid of which any user of
+APyCE will mostly need are included in the former class.</p>
+<p>APyCE’s workflow, in short, receives a deck-like Eclipse/Builder file
+and outputs a VTU-like file. After creating the VTK points, the software
+will retrieve the cells that follow the VTK pattern by dealing with
+hexahedral objects, as this pattern is different from the one followed
+by the Eclipse software. Then, by simply calling the
+<code>export_data</code> function, the VTK file will be exported for
+later exhibition in the Paraview software.</p>
+<figure>
+<img src="media/flowchart.png" alt="General APyCE’s workflow." />
+<figcaption aria-hidden="true">General APyCE’s workflow.<span
+id="fig:workflow" label="fig:workflow"></span></figcaption>
+</figure>
+<p>APyCE’s current version supports the following keywords (those marked
+with an asterisk are special add-on features not present in
+PyGRDECL):</p>
+<ul>
+<li><em>SPECGRID</em>: specifies the number of cells in each direction
+of a corner-point grid.</li>
+<li><em>DIMENS</em>: ditto for block-centered grids.</li>
+<li><em>COORD</em>: specifies the 3D coordinates of the pillars.</li>
+<li><em>ZCORN</em>: indicates the depth of each cell corner over the
+pillars.</li>
+<li><em>PORO</em>: stores the porosity values per cell.</li>
+<li><em>PERMX</em>: stores the X-direction permeability for each grid
+cell.</li>
+<li><em>PERMY</em>: ditto for the Y-direction.</li>
+<li><em>PERMZ</em>: ditto for the Z-direction.</li>
+<li><em>DX</em>: specifies the step size over the X-direction for
+block-centered grids.</li>
+<li><em>DY</em>: ditto Y-direction.</li>
+<li><em>DZ</em>: ditto Z-direction.</li>
+<li><em>TOPS</em>: stores the reference value from the top for each cell
+in a block-centered grid.</li>
+<li><em>INCLUDE</em><sup>*</sup>: appends supplementary files to the
+main file.</li>
+<li><em>ACTNUM</em><sup>*</sup>: tags grid cells as active/inactive
+(boolean value).</li>
+</ul>
+<p>The example script <code>Getting_Started.py</code>, which basically
+reproduces the basic code instructions (see <a href="#fig:workflow"
+data-reference-type="autoref"
+data-reference="fig:workflow">[fig:workflow]</a>) generates multiple VTK
+file, which can be visually improved from Paraview as depicted in the
+showcase (<a href="#fig:showcase" data-reference-type="autoref"
+data-reference="fig:showcase">[fig:showcase]</a>).</p>
+<figure>
+<img src="media/showcase.png"
+alt="Several models of reservoirs generated by APyCE with different cuts after rendering and filtering operations. " />
+<figcaption aria-hidden="true">Several models of reservoirs generated by
+APyCE with different cuts after rendering and filtering operations.
+<span id="fig:showcase" label="fig:showcase"></span></figcaption>
+</figure>
+<h2 id="additional-information">Additional information</h2>
+<p>APyCE was written in Python 3.8. The choice for this language is
+justified by the vast amount of modules available to perform scientific
+computing, signal processing, and graphic manipulation tasks. Another
+point that strengthens the choice for Python is its simplicity, which
+reduces software maintenance. Through the available modules and
+packages, modularized programming and code reuse is encouraged.</p>
+<p>As for processing, highly refined grids (hundreds or millions of
+cells) may demand a robust hardware ensemble (RAM and processor). Yet
+less complex grids are manageable affordably. Also, to work properly,
+APyCE requires the following Python packages: <code>NumPy</code> (v.
+1.19.2 or above), <code>VTK</code> (v. 8.2.0 or above),
+<code>PyVista</code> (v. 0.29 or above), and <code>Matplotlib</code> (v.
+3.4.1 or above).</p>
+<p>The most current version was tested on Ubuntu 20.04 distribution with
+the 5.11.0-25-generic kernel anw with <code>PyTest</code> <span
+class="citation" data-cites="pytest">(<a href="#ref-pytest"
+role="doc-biblioref">Krekel et al., 2004</a>)</span>. All the workflow
+for exporting/visualizing corner-point grids are fully workable, but
+block-centered grids still have partial keyword support.</p>
+<h2 id="acknowledgments">Acknowledgments</h2>
+<p>G.P.O. and M.T. acknowledge the funding received by the National
+Council for Scientific and Technological Development (CNPq-Brazil) under
+the PIBIC/UFPB Program 2020-2021, grant no. PVL11528-2020.</p>
+<h1 class="unnumbered" id="references">References</h1>
+<div id="refs" class="references csl-bib-body hanging-indent"
+data-line-spacing="2" role="doc-bibliography">
+<div id="ref-paraview2015" class="csl-entry" role="doc-biblioentry">
+Ayachit, U., &amp; Avila, L. S. (2015). <em>The ParaView guide: Updated
+for ParaView version 4.3</em>. Kitware. ISBN: 9781930934306
+</div>
+<div id="ref-fanchi2005" class="csl-entry" role="doc-biblioentry">
+Fanchi, J. R. (2005). <em>Principles of applied reservoir
+simulation</em> (3rd ed.). Elsevier.
+</div>
+<div id="ref-vtk2010" class="csl-entry" role="doc-biblioentry">
+Kitware. (2010). <em>The VTK user’s guide</em>. Kitware.
+ISBN: 9781930934238
+</div>
+<div id="ref-pytest" class="csl-entry" role="doc-biblioentry">
+Krekel, H., Oliveira, B., Pfannschmidt, R., Bruynooghe, F., Laugher, B.,
+&amp; Bruhin, F. (2004). <em>Pytest 6.2.4</em>. <a
+href="https://github.com/pytest-dev/pytest">https://github.com/pytest-dev/pytest</a>
+</div>
+<div id="ref-knut2019" class="csl-entry" role="doc-biblioentry">
+Lie, K.-A. (2019). <em>An introduction to reservoir simulation using
+MATLAB/GNU octave: User guide for the MATLAB reservoir simulation
+toolbox (MRST)</em>. Cambridge University Press.
+</div>
+<div id="ref-pettersen2006" class="csl-entry" role="doc-biblioentry">
+Pettersen, Ø. (2006). <em>Basics of reservoir simulation with the
+eclipse reservoir simulator</em>.<br />
+<a href="http://www.mj-oystein.no/index_htm_files/ResSimNotes.pdf"
+class="uri">http://www.mj-oystein.no/index_htm_files/ResSimNotes.pdf</a>.
+</div>
+<div id="ref-ponting1989corner" class="csl-entry"
+role="doc-biblioentry">
+Ponting, D. K. (1989). Corner point geometry in reservoir simulation.
+<em>ECMOR i-1st European Conference on the Mathematics of Oil
+Recovery</em>, cp–234.
+</div>
+<div id="ref-Eclipse" class="csl-entry" role="doc-biblioentry">
+Schlumberger. (2014). <em>ECLIPSE reservoir simulation software
+reference manual</em>. Schlumberger.
+</div>
+<div id="ref-pyvista" class="csl-entry" role="doc-biblioentry">
+Sullivan, C. B., &amp; Kaszynski, A. A. (2019). PyVista: 3D plotting and
+mesh analysis through a streamlined interface for the visualization
+toolkit (VTK). <em>Journal of Open Source Software</em>, <em>4</em>(37),
+1450. <a
+href="https://doi.org/10.21105/joss.01450">https://doi.org/10.21105/joss.01450</a>
+</div>
+<div id="ref-pygrdecl" class="csl-entry" role="doc-biblioentry">
+Wang, B. (2018). <em>PyGRDECL a python-based GRDECL visualization
+library</em>. <a
+href="https://github.com/BinWang0213/PyGRDECL">https://github.com/BinWang0213/PyGRDECL</a>
+</div>
+</div>
+</body>
+</html>
