@@ -13,14 +13,18 @@ This artwork comprises examples of a few Cartesian and non-Cartesian petroleum 3
 
 Mateus Tosta (@mt2312) <sup>1,*</sup> (mateustosta@outlook.com.br), Bin Wang (@BinWang0213) <sup>2</sup> (bin.wang@cup.edu.cn), and Gustavo P. Oliveira (@gcpeixoto) <sup>1</sup> (gustavo.oliveira@ci.ufpb.br)
 
-<sup>1</sup> TRIL Lab, Federal University of Paraíba, João Pessoa, Brazil
+<sup>1</sup> TRIL Lab, Center of Informatics, Federal University of Paraíba, João Pessoa, Brazil
 
-<sup>2</sup> Department of Petroleum Engineering, China University of Petroleum, Beijing, China
+<sup>2</sup> State Key Laboratory of Petroleum Resources and Prospecting, China University of Petroleum-Beijing, Beijing 102249, P. R. China
 
 <sup>*</sup> Currently at Gaudium Corp., Brazil
 
 ## Statement of need
-APyCE is an open-source Python utility module for 3D visualization of  _corner-point grid_ reservoir models. It improves and expands the pioneer [PyGRDECL](https://github.com/BinWang0213/PyGRDECL) library and provides a seamless conversion from proprietary format (deck-like) files handled by leading softwares of the oil and gas sector, such as CMG Builder™ and Schlumberger Eclipse™, and VTK/VTU format, thus enabling interactive visualization through [ParaView](https://www.paraview.org). Additionally, it outputs static visuals on top of [PyVista](https://www.pyvista.org/).
+_APyCE_ (pronounced as "ah-pees") is an enhanced version of the early project PyGRDECL (by @BinWang0213), developed to handle Schlumberger Eclipse© deck files for visualization. APyCE is multi-platform, 
+object-oriented, and easy to use, being prepared to fulfill its objectives with only 4 lines of Python code to be run by whoever with a minimum background in programming. It is recommended for researchers who need to render high-quality figures for inclusion into scientific papers, reports, presentations, handouts, interactive notebooks, and general documents for teaching purposes, or auxiliary tools for data analysis within reservoir modeling or related domains. 
+
+APyCE was developed to allow quick analysis and visualization of 3D oil and gas reservoirs, so that the tool can be used by people in academia or industry. It is an open-source tool maintained on GitHub platform, fully accessible to any developer interested to contribute via pull requests. Given its object-oriented structure, the code can be 
+extended and improved for further applications.
 
 ## Components  
 All the components of APyCE are briefly described below.

@@ -9,22 +9,21 @@ tags:
 authors:
   - name: Mateus Tosta
     equal-contrib: true
-    affiliation: "1, 2" # (Multiple affiliations must be quoted)
+    affiliation: 1 # (Multiple affiliations must be quoted)
   - name: Bin Wang
-    orcid: 
+    orcid: 0000-0001-9214-2513
     equal-contrib: true # (This is how you can denote equal contributions between multiple authors)
-    affiliation: 3
+    affiliation: 2
   - name: Gustavo P. Oliveira
+    orcid: 0000-0002-4042-3548
     corresponding: true # (This is how to denote the corresponding author)
     affiliation: 1
 affiliations:
- - name: TRIL Lab, Center of Informatics, Federal University of Paraíba, Brazil
+ - name: TRIL Lab, Center of Informatics, Federal University of Paraíba, João Pessoa, Brazil
    index: 1
- - name: Gaudium Corporation, Rio de Janeiro, Brazil
+ - name: State Key Laboratory of Petroleum Resources and Prospecting, China University of Petroleum-Beijing, Beijing 102249, P. R. China
    index: 2
- - name: Department of Petroleum Engineering, China University of Petroleum, Beijing, China
-   index: 3
-date: XX May 2023
+date: 01 May 2023
 bibliography: paper.bib
 
 ---
@@ -54,7 +53,7 @@ make reports with interactive plots, and easily generate publication-ready graph
 A considerable number of commercial and open-source software capable to deal with corner-point grids for 
 visualization purposes are known. Either they have embedded viewers as secondary functionality or are 
 primarily tailored for visualization. In the first group, we can cite CMG Results©, 
-Schlumberger Petrel©, ESSS Kraken, and Amarile RE-Studio; 
+Schlumberger Petrel©, ESSS Kraken©, and Amarile RE-Studio©; 
 in the second group, SINTEF's MRST [@knut2019] and Ceetron Solution's ResInsight are a few options. 
 Minor open-source software projects have been proposed by scholars and independent scientists with an 
 interest in O\&G data, but they are usually focused on flow simulations instead of visualization and
@@ -67,7 +66,7 @@ a simple pipeline for post-processing through the PyVista module [@pyvista] and 
 
 # Statement of need
 
-_APyCE_ (pronounced as ``ah-pees'') is an enhanced version of the early project PyGRDECL [@pygrdecl], 
+_APyCE_ (pronounced as "ah-pees") is an enhanced and extended version of the early project PyGRDECL [@pygrdecl], 
 developed to handle Schlumberger Eclipse© [@Eclipse] deck files for visualization. APyCE is multi-platform, 
 object-oriented, and easy to use, being prepared to fulfill its objectives with only 4 lines of Python code 
 to be run by whoever with a minimum background in programming. It is recommended for researchers who need to 
@@ -89,8 +88,8 @@ to be processed, the greater is the level of details on stratigraphy, fluid prop
 
 In particular, Eclipse's more general files that contain grid specifications have a `.GRDECL` extension. Initially, 
 we implemented a parser routine that recognizes only the essential keywords to build either a corner-point
-(Fig. \autoref{fig:cpg}) or block-centered grid (Fig. \autoref{fig:blocks}). All keywords of the file are 
-identified by a regular expression like `^[A-Z][A-Z0-9]{0,7}` (Fig. \ref{fig:grdecl}).
+(\autoref{fig:cpg}) or block-centered grid (\autoref{fig:blocks}). All keywords of the file are 
+identified by a regular expression like `^[A-Z][A-Z0-9]{0,7}` (\autoref{fig:grdecl}).
 
 ![Corner-point grid. This geometry enables us to describe reservoirs with geological realism. 
 Sometimes referred to as "pillar grid" because of ensembles of pillars that span from the top to 
@@ -119,40 +118,39 @@ in the Paraview software.
 
 ![General APyCE's workflow.\label{fig:workflow}](flowchart.png)
 
-APyCE's current version supports the following keywords:
+APyCE's current version supports the following keywords (those marked with an asterisk are special add-on features not present in PyGRDECL):
 
 -  _SPECGRID_: specifies the number of cells in each direction of a corner-point grid.
 -  _DIMENS_: ditto for block-centered grids.
 -  _COORD_: specifies the 3D coordinates of the pillars.
 -  _ZCORN_: indicates the depth of each cell corner over the pillars.
--  _PORO_: stores the porosity values per cell.  
+-  _PORO_: stores the porosity values per cell.
 -  _PERMX_: stores the X-direction permeability for each grid cell. 
 -  _PERMY_: ditto for the Y-direction.
 -  _PERMZ_: ditto for the Z-direction.
--  _INCLUDE_: appends supplementary files to the main file.
--  _ACTNUM_: tags grid cells as active/inactive (boolean value).
 -  _DX_: specifies the step size over the X-direction for block-centered grids. 
 -  _DY_: ditto Y-direction.
 -  _DZ_: ditto Z-direction.
 -  _TOPS_: stores the reference value from the top for each cell in a block-centered grid.
+-  _INCLUDE_<sup>*</sup>: appends supplementary files to the main file.
+-  _ACTNUM_<sup>*</sup>: tags grid cells as active/inactive (boolean value).
 
 The example script `Getting_Started.py`, which basically reproduces the basic code instructions
-(see Fig. \autoref{fig:workflow}) generates multiple VTK file, which can be visually improved from 
-Paraview as depicted in the showcase (Fig. \autoref{fig:showcase}).
+(see \autoref{fig:workflow}) generates multiple VTK file, which can be visually improved from 
+Paraview as depicted in the showcase (\autoref{fig:showcase}).
 
 ![Several models of reservoirs generated by APyCE with different cuts after rendering and filtering operations.
 \label{fig:showcase}](showcase.png)
 
-## Programming language
-APyCE is written in Python 3.8. The choice for this language is justified by the vast amount of modules available
+## Additional information
+APyCE was written in Python 3.8. The choice for this language is justified by the vast amount of modules available
 to perform scientific computing, signal processing, and graphic manipulation tasks. Another point that strengthens
 the choice for Python is its simplicity, which reduces software maintenance. Through the available modules and packages,
 modularized programming and code reuse is encouraged.
 
-## Additional information
-Processing greatly refined grids (hundreds or millions of cells) may demand high RAM and processor power. 
-Yet less complex grids are manageable affordably. Also, to work properly, APyCE requires the following Python packages:
+As for processing, highly refined grids (hundreds or millions of cells) may demand a robust hardware ensemble (RAM and processor). Yet less complex grids are manageable affordably. Also, to work properly, APyCE requires the following Python packages:
 `NumPy` (v. 1.19.2 or above), `VTK` (v. 8.2.0 or above), `PyVista` (v. 0.29 or above), and `Matplotlib` (v. 3.4.1 or above).
+
 The most current version was tested on Ubuntu 20.04 distribution with the 5.11.0-25-generic kernel anw with `PyTest` [@pytest]. 
 All the workflow for exporting/visualizing corner-point grids are fully workable, but block-centered grids still have 
 partial keyword support.
