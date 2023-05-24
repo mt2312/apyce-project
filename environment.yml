@@ -1,0 +1,12 @@
+name: apyce
+channels:
+  - defaults
+  - anaconda
+  - conda-forge
+dependencies:
+  - python=3.8
+  - numpy=1.19.2
+  - vtk=8.2.0
+  - pyvista=0.29.0
+  - matplotlib=3.4.1
+

@@ -56,9 +56,8 @@ To setup the development environment, do the following
 
 or use Anaconda: 
 
-    conda create -n apyce
+    conda create -f environment.yml
     conda activate apyce
-    conda install numpy vtk pyvista matplotlib
     
 ## Usage  
 
